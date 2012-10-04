@@ -2,8 +2,10 @@
 
 require 'thor'
 require 'aws'
+require 'open3'
 require 'rubydoop/package' # this prints an annoying warning in JRuby 1.7.0.RC1
 require 'humboldt/emr_flow'
+require 'humboldt/hadoop_status_filter'
 
 
 
@@ -13,7 +15,7 @@ module Humboldt
 
     desc 'package', 'Package job JAR file'
     def package
-      say("Packaging job into #{relative_path(job_package.jar_path)}")
+      say_status(:package, relative_path(job_package.jar_path))
       job_package.create!
     end
 
@@ -24,6 +26,9 @@ module Humboldt
     method_option :job_config, :type => 'string', :desc => 'the Ruby file containing the job configuration, defaults to the project name'
     method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
     method_option :local_completes, :type => :string, :default => 'data/completes'
+    method_option :data_bucket, :type => :string, :default => 'completes-logs'
+    method_option :job_bucket, :type => :string, :default => 'humboldt-emr'
+    method_option :silent, :default => true
     def launch
       check_job!
       invoke(:package, [], {})
@@ -57,11 +62,11 @@ module Humboldt
     end
 
     def job_bucket
-      @job_bucket ||= s3.buckets['humboldt-emr']
+      @job_bucket ||= s3.buckets[options[:job_bucket]]
     end
 
     def data_bucket
-      @data_bucket ||= s3.buckets['test-completes-logs']
+      @data_bucket ||= s3.buckets[options[:data_bucket]]
     end
 
     def check_job!
@@ -78,31 +83,47 @@ module Humboldt
       end
     end
 
+    def run_command(*args)
+      say_status(:running, 'Hadoop started')
+      Open3.popen3(*args) do |stdin, stdout, stderr|
+        stdin.close
+        stdout_printer = Thread.new(stdout) do |stdout|
+          while line = stdout.gets
+            say(line.chomp)
+          end
+        end
+        stderr_printer = Thread.new(stderr) do |stderr|
+          filter = HadoopStatusFilter.new(stderr, self, options.silent?)
+          filter.run
+        end
+        stdout_printer.join
+        stderr_printer.join
+      end
+    end
+
     def launch_local!
       output_path = options[:output] || "data/#{job_config}/output"
       output_path_parent = File.dirname(output_path)
       if options.cleanup_before?
-        say("Cleaning up #{output_path}")
         remove_file(output_path)
       else
         check_local_output!(output_path)
       end
       unless File.exists?(output_path_parent)
-        say("Creating #{output_path_parent}")
         empty_directory(output_path_parent)
       end
       input_glob = File.join(options[:local_completes], options[:input])
       config_path = File.expand_path('../../../config/hadoop-local.xml', __FILE__)
-      system('hadoop', 'jar', project_jar, '-conf', config_path, job_config, input_glob, output_path)
+      run_command('hadoop', 'jar', project_jar, '-conf', config_path, job_config, input_glob, output_path)
     end
 
     def launch_emr!
       flow = EmrFlow.new(job_config, options[:input_glob], job_package, emr, job_bucket, data_bucket)
       if options.cleanup_before?
-        say("Cleaning up #{flow.output_uri}")
+        say_status(:remove, flow.output_uri)
         flow.cleanup!
       end
-      say("Uploading JAR to #{flow.jar_uri}")
+      say_status(:upload, flow.jar_uri)
       flow.prepare!
       # job_flow_id = flow.launch!
       # say("Started EMR job flow #{job_flow_id}")
