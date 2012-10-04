@@ -14,7 +14,7 @@ module Humboldt
       delete_output_dir!
     end
 
-    def launch!(launch_options={})
+    def run!(launch_options={})
       check_jar!
       check_output_dir!
       create_flow!(launch_options)

@@ -51,7 +51,7 @@ module Humboldt
       end
     end
 
-    describe 'launch!' do
+    describe '#run!' do
       before do
         bucket_objects.stub(:with_prefix).with('my_awesome_job/my_awesome_job.jar').and_return(['my_awesome_job.jar'])
         bucket_objects.stub(:with_prefix).with('my_awesome_job/some_job/output').and_return([])
@@ -59,12 +59,12 @@ module Humboldt
 
       it 'raises an error if the job JAR does not exist' do
         bucket_objects.stub(:with_prefix).with('my_awesome_job/my_awesome_job.jar').and_return([])
-        expect { flow.launch! }.to raise_error(%r{s3://job-bucket/my_awesome_job/my_awesome_job\.jar})
+        expect { flow.run! }.to raise_error(%r{s3://job-bucket/my_awesome_job/my_awesome_job\.jar})
       end
 
       it 'raises an error if the output directory already exists' do
         bucket_objects.stub(:with_prefix).with('my_awesome_job/some_job/output').and_return(['my_awesome_job/some_job/output'])
-        expect { flow.launch! }.to raise_error(%r{s3://job-bucket/my_awesome_job/some_job/output})
+        expect { flow.run! }.to raise_error(%r{s3://job-bucket/my_awesome_job/some_job/output})
       end
 
       it 'creates a new job flow' do
@@ -74,7 +74,7 @@ module Humboldt
           configuration.should have_key(:instances)
           configuration.should have_key(:steps)
         end
-        flow.launch!
+        flow.run!
       end
 
       context 'job configuration' do
@@ -85,12 +85,12 @@ module Humboldt
         end
 
         it 'sets the log URI of the job flow' do
-          flow.launch!
+          flow.run!
           @configuration[:log_uri].should == 's3://job-bucket/my_awesome_job/some_job/logs'
         end
 
         it 'configures the job flow steps' do
-          flow.launch!
+          flow.run!
           @configuration[:steps].should == [{
             :name => 'my_awesome_job',
             :hadoop_jar_step => {
@@ -105,7 +105,7 @@ module Humboldt
         end
 
         it 'configures the instances' do
-          flow.launch!
+          flow.run!
           @configuration[:instances].should == {
             :ec2_key_name => 'burt-id_rsa-gsg-keypair',
             :hadoop_version => '1.0.3',
@@ -131,7 +131,7 @@ module Humboldt
         end
 
         it 'allows changes to the instance configuration' do
-          flow.launch!(instance_count: 8, instance_type: 'cc2.8xlarge', bid_price: '0.01')
+          flow.run!(instance_count: 8, instance_type: 'cc2.8xlarge', bid_price: '0.01')
           master_group, core_group = @configuration[:instances][:instance_groups]
           core_group[:instance_count].should == 8
           core_group[:instance_type].should == 'cc2.8xlarge'

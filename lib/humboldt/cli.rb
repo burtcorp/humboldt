@@ -19,24 +19,49 @@ module Humboldt
       job_package.create!
     end
 
-    desc 'launch a job', 'run the named job'
-    method_option :input, :type => :string, :required => true
-    method_option :mode, :default => 'local'
-    method_option :output, :type => :string, :desc => 'the output directory, defaults to data/<job config>/output in local mode and s3://<job bucket>/<project name>/output in emr mode'
-    method_option :job_config, :type => 'string', :desc => 'the Ruby file containing the job configuration, defaults to the project name'
+    desc 'run-local', 'run a job in local mode with the hadoop command'
+    method_option :input, :type => :string, :required => true, :desc => 'input glob, will be resolved agains the data path'
+    method_option :output, :type => :string, :desc => 'the output directory, defaults to "data/<job_config>/output"'
+    method_option :job_config, :type => 'string', :desc => 'the name of the Ruby file containing the job configuration, defaults to the project name (e.g. "lib/<job_config>.rb")'
     method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
-    method_option :local_completes, :type => :string, :default => 'data/completes'
-    method_option :data_bucket, :type => :string, :default => 'completes-logs'
-    method_option :job_bucket, :type => :string, :default => 'humboldt-emr'
-    method_option :silent, :default => true
-    def launch
+    method_option :data_path, :type => :string, :default => 'data/completes', :desc => 'input paths will be resolved against this path'
+    method_option :silent, :type => :boolean, :default => true, :desc => 'silence the hadoop command\'s logging'
+    def run_local
       check_job!
       invoke(:package, [], {})
-      case options[:mode].downcase.to_sym
-      when :local then launch_local!
-      when :emr then launch_emr!
-      else raise Thor::Error, "#{mode} not supported"
+      output_path = options[:output] || "data/#{job_config}/output"
+      output_path_parent = File.dirname(output_path)
+      if options.cleanup_before?
+        remove_file(output_path)
+      else
+        check_local_output!(output_path)
       end
+      unless File.exists?(output_path_parent)
+        empty_directory(output_path_parent)
+      end
+      input_glob = File.join(options[:data_path], options[:input])
+      run_command('hadoop', 'jar', project_jar, '-conf', hadoop_config_path, job_config, input_glob, output_path)
+    end
+
+    desc 'run-emr', 'run a job in Elastic MapReduce'
+    method_option :input, :type => :string, :required => true, :desc => 'input glob, will be resolved against the data bucket'
+    method_option :output, :type => :string, :desc => 'the output directory, defaults to "<project_name>/<job_config>/output" in the job bucket'
+    method_option :job_config, :type => 'string', :desc => 'the name of the Ruby file containing the job configuration, defaults to the project name (e.g. "lib/<job_config>.rb")'
+    method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
+    method_option :data_bucket, :type => :string, :default => 'completes-logs', :desc => 'S3 bucket containing input data'
+    method_option :job_bucket, :type => :string, :default => 'humboldt-emr', :desc => 'S3 bucket to upload JAR, output logs and results into'
+    def run_emr
+      check_job!
+      invoke(:package, [], {})
+      flow = EmrFlow.new(job_config, options[:input_glob], job_package, emr, job_bucket, data_bucket)
+      if options.cleanup_before?
+        say_status(:remove, flow.output_uri)
+        flow.cleanup!
+      end
+      say_status(:upload, flow.jar_uri)
+      flow.prepare!
+      # job_flow_id = flow.run!
+      # say_status(:started, %{EMR job flow "#{job_flow_id}"})
     end
 
     private
@@ -51,6 +76,10 @@ module Humboldt
 
     def job_config
       options[:job_config] || job_package.project_name
+    end
+
+    def hadoop_config_path
+      File.expand_path('../../../config/hadoop-local.xml', __FILE__)
     end
 
     def s3
@@ -99,34 +128,6 @@ module Humboldt
         stdout_printer.join
         stderr_printer.join
       end
-    end
-
-    def launch_local!
-      output_path = options[:output] || "data/#{job_config}/output"
-      output_path_parent = File.dirname(output_path)
-      if options.cleanup_before?
-        remove_file(output_path)
-      else
-        check_local_output!(output_path)
-      end
-      unless File.exists?(output_path_parent)
-        empty_directory(output_path_parent)
-      end
-      input_glob = File.join(options[:local_completes], options[:input])
-      config_path = File.expand_path('../../../config/hadoop-local.xml', __FILE__)
-      run_command('hadoop', 'jar', project_jar, '-conf', config_path, job_config, input_glob, output_path)
-    end
-
-    def launch_emr!
-      flow = EmrFlow.new(job_config, options[:input_glob], job_package, emr, job_bucket, data_bucket)
-      if options.cleanup_before?
-        say_status(:remove, flow.output_uri)
-        flow.cleanup!
-      end
-      say_status(:upload, flow.jar_uri)
-      flow.prepare!
-      # job_flow_id = flow.launch!
-      # say("Started EMR job flow #{job_flow_id}")
     end
   end
 end
