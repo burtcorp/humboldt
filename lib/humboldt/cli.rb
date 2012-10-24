@@ -58,7 +58,7 @@ module Humboldt
     def run_emr
       check_job!
       invoke(:package, [], {})
-      flow = EmrFlow.new(job_config, options[:input_glob], job_package, emr, job_bucket, data_bucket)
+      flow = EmrFlow.new(job_config, options[:input], job_package, emr, job_bucket, data_bucket)
       if options.cleanup_before?
         say_status(:remove, flow.output_uri)
         flow.cleanup!
@@ -66,6 +66,7 @@ module Humboldt
       say_status(:upload, flow.jar_uri)
       flow.prepare!
       job_flow = flow.run!
+      File.open('.humboldtjob', 'w') { |io| io.puts(job_flow.job_flow_id) }
       say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})
     end
 

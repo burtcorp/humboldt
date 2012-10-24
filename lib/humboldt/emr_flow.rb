@@ -127,7 +127,6 @@ module Humboldt
 
     def create_flow!(launch_options)
       job_flow = @emr.job_flows.create(@package.project_name, job_flow_configuration(launch_options))
-
     end
   end
 end
