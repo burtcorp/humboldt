@@ -50,6 +50,11 @@ module Humboldt
     method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
     method_option :data_bucket, :type => :string, :default => 'completes-logs', :desc => 'S3 bucket containing input data'
     method_option :job_bucket, :type => :string, :default => 'humboldt-emr', :desc => 'S3 bucket to upload JAR, output logs and results into'
+    method_option :instance_count, :type => :numeric, :default => 4, :desc => 'the number of worker instances to launch'
+    method_option :instance_type, :type => :string, :default => 'c1.xlarge', :desc => 'the worker instance type, see http://ec2pricing.iconara.info/ for available types'
+    method_option :spot_instances, :type => :boolean, :default => true, :desc => 'use spot instances, set to false to use on-demand instances'
+    method_option :bid_price, :type => :string, :default => '0.2', :desc => 'how much to bid for spot instances, see http://ec2pricing.iconara.info/ for current spot prices'
+    method_option :poll, :type => :boolean, :default => false, :desc => 'poll the job\'s status every 10s and display'
     def run_emr
       check_job!
       invoke(:package, [], {})
@@ -60,11 +65,31 @@ module Humboldt
       end
       say_status(:upload, flow.jar_uri)
       flow.prepare!
-      # job_flow_id = flow.run!
-      # say_status(:started, %{EMR job flow "#{job_flow_id}"})
+      job_flow = flow.run!
+      say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})
+    end
+
+    desc 'emr-job', 'show status of the last EMR job'
+    def emr_job
+      if File.exists?('.humboldtjob')
+        job_flow_id = File.read('.humboldtjob').strip
+        job_flow = emr.job_flows[job_flow_id]
+        print_job_flow_extended_status(job_flow)
+      else
+        say_status(:warning, 'Could not determine last job flow ID')
+      end
+    end
+
+    desc 'emr-jobs', 'list all EMR jobs'
+    def emr_jobs
+      emr.job_flows.each do |job_flow|
+        print_job_flow_status(job_flow)
+      end
     end
 
     private
+
+    ISO_DATE_TIME = '%Y-%m-%d %H:%M:%S'.freeze
 
     def project_jar
       @project_jar ||= Dir['build/*.jar'].reject { |path| path.start_with?('jruby-complete') }.first
@@ -87,7 +112,7 @@ module Humboldt
     end
 
     def emr
-      @emr ||= AWS::EMR.new
+      @emr ||= AWS::EMR.new(emr_endpoint: 'eu-west-1.elasticmapreduce.amazonaws.com')
     end
 
     def job_bucket
@@ -128,6 +153,32 @@ module Humboldt
         stdout_printer.join
         stderr_printer.join
       end
+    end
+
+    def print_job_flow_extended_status(job_flow)
+      id = job_flow.job_flow_id
+      state = job_flow.state
+      created_at = job_flow.created_at.strftime(ISO_DATE_TIME)
+      change_reason = job_flow.last_state_change_reason
+      say_status(:started, created_at)
+      say_status(:state, state)
+      say_status(:change, change_reason)
+    rescue => e
+      say_status(:error, e.message, :red)
+      sleep 1
+      retry
+    end
+
+    def print_job_flow_status(job_flow)
+      id = job_flow.job_flow_id
+      state = job_flow.state
+      created_at = job_flow.created_at.strftime(ISO_DATE_TIME)
+      change_reason = job_flow.last_state_change_reason
+      say_status(:status, sprintf('%-15s %-10s %19s %s', id, state, created_at, change_reason))
+    rescue => e
+      say_status(:error, e.message, :red)
+      sleep 1
+      retry
     end
   end
 end
