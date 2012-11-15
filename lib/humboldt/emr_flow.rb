@@ -2,8 +2,11 @@
 
 module Humboldt
   class EmrFlow
+    attr_reader :output_path
+
     def initialize(*args)
-      @job_name, @input_glob, @package, @emr, @job_bucket, @data_bucket = args
+      @job_name, @input_glob, @package, @emr, @data_bucket, @job_bucket, @output_path = args
+      @output_path ||= "#{@package.project_name}/#{@job_name}/output"
     end
 
     def prepare!
@@ -26,10 +29,6 @@ module Humboldt
 
     def jar_uri
       s3_uri(jar_path)
-    end
-
-    def output_path
-      "#{@package.project_name}/#{@job_name}/output"
     end
 
     def output_uri

@@ -32,7 +32,7 @@ module Humboldt
     end
 
     let :flow do
-      described_class.new('some_job', 'input_glob/*/*', package, emr, job_bucket, data_bucket)
+      described_class.new('some_job', 'input_glob/*/*', package, emr, data_bucket, job_bucket)
     end
 
     describe '#prepare!' do
@@ -48,6 +48,17 @@ module Humboldt
         output_objects.should_receive(:delete_all)
         bucket_objects.stub(:with_prefix).with('my_awesome_job/some_job/output').and_return(output_objects)
         flow.cleanup!
+      end
+    end
+
+    describe '#output_path' do
+      it 'defaults to an output path based on the project and job name' do
+        flow.output_path.should == 'my_awesome_job/some_job/output'
+      end
+
+      it 'can be overridden' do
+        f = described_class.new('some_job', 'input_glob/*/*', package, emr, data_bucket, job_bucket, 'some/other/path')
+        f.output_path.should == 'some/other/path'
       end
     end
 

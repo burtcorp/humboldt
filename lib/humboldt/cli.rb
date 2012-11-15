@@ -58,7 +58,7 @@ module Humboldt
     def run_emr
       check_job!
       invoke(:package, [], {})
-      flow = EmrFlow.new(job_config, options[:input], job_package, emr, job_bucket, data_bucket)
+      flow = EmrFlow.new(job_config, options[:input], job_package, emr, data_bucket, job_bucket, options[:output])
       if options.cleanup_before?
         say_status(:remove, flow.output_uri)
         flow.cleanup!
