@@ -93,7 +93,7 @@ module Humboldt
     ISO_DATE_TIME = '%Y-%m-%d %H:%M:%S'.freeze
 
     def project_jar
-      @project_jar ||= Dir['build/*.jar'].reject { |path| path.start_with?('jruby-complete') }.first
+      @project_jar ||= Dir['build/*.jar'].reject { |path| path.start_with?('build/jruby-complete') }.first
     end
 
     def job_package
