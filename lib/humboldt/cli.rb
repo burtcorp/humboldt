@@ -23,6 +23,7 @@ module Humboldt
     method_option :input, :type => :string, :required => true, :desc => 'input glob, will be resolved agains the data path'
     method_option :output, :type => :string, :desc => 'the output directory, defaults to "data/<job_config>/output"'
     method_option :job_config, :type => 'string', :desc => 'the name of the Ruby file containing the job configuration, defaults to the project name (e.g. "lib/<job_config>.rb")'
+    method_option :hadoop_config, :type => 'string', :desc => 'the path to a Hadoop configuration XML file, defaults to Humboldt-provided config that runs Hadoop in local-mode'
     method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
     method_option :data_path, :type => :string, :default => 'data/completes', :desc => 'input paths will be resolved against this path'
     method_option :silent, :type => :boolean, :default => true, :desc => 'silence the hadoop command\'s logging'
@@ -40,6 +41,7 @@ module Humboldt
         empty_directory(output_path_parent)
       end
       input_glob = File.join(options[:data_path], options[:input])
+      hadoop_config_path = options[:hadoop_config] || default_hadoop_config_path
       run_command('hadoop', 'jar', project_jar, '-conf', hadoop_config_path, job_config, input_glob, output_path)
     end
 
@@ -104,7 +106,7 @@ module Humboldt
       options[:job_config] || job_package.project_name
     end
 
-    def hadoop_config_path
+    def default_hadoop_config_path
       File.expand_path('../../../config/hadoop-local.xml', __FILE__)
     end
 
