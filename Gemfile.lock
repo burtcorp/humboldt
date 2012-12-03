@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    humboldt (1.0.0-java)
+    humboldt (0.1.1-java)
       aws-sdk
       jruby-openssl
       json
@@ -11,7 +11,7 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
-    aws-sdk (1.6.6)
+    aws-sdk (1.7.1)
       httparty (~> 0.7)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
@@ -32,7 +32,7 @@ GEM
       bouncy-castle-java (>= 1.5.0146.1)
     json (1.7.5-java)
     method_source (0.8)
-    multi_json (1.3.6)
+    multi_json (1.3.7)
     multi_xml (0.5.1)
     nokogiri (1.5.5-java)
     pry (0.9.10-java)
@@ -51,7 +51,7 @@ GEM
     rspec-expectations (2.11.3)
       diff-lcs (~> 1.1.3)
     rspec-mocks (2.11.3)
-    rubydoop (1.0.0-java)
+    rubydoop (1.0.4)
     sinatra (1.3.3)
       rack (~> 1.3, >= 1.3.6)
       rack-protection (~> 1.2)
