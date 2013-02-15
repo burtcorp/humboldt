@@ -5,7 +5,10 @@ require 'hadoop'
 
 module Hadoop
   module FileCache
-    java_import 'org.apache.hadoop.filecache.DistributedCache'
+    include_package 'org.apache.hadoop.filecache'
+  end
+  module Conf
+    include_package 'org.apache.hadoop.conf'
   end
 end
 
