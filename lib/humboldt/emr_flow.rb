@@ -10,6 +10,7 @@ module Humboldt
     end
 
     def prepare!
+      upload_bootstrap_task_files!
       upload_jar!
     end
 
@@ -47,11 +48,21 @@ module Humboldt
     DEFAULT_CORE_INSTANCE_TYPE = 'c1.xlarge'.freeze
     DEFAULT_BID_PRICE = '0.2'.freeze
     DEFAULT_CORE_INSTANCE_COUNT = 4
+    BOOTSTRAP_TASK_FILES = {
+      :remove_old_jruby => 'config/emr-bootstrap/remove_old_jruby.sh'
+    }.freeze
 
     def s3_uri(path, options={})
       protocol = options[:protocol] || 's3'
       bucket = options[:bucket] || @job_bucket
       "#{protocol}://#{bucket.name}/#{path}"
+    end
+
+    def upload_bootstrap_task_files!
+      BOOTSTRAP_TASK_FILES.values.each do |local_path|
+        remote_obj = @job_bucket.objects["#{@package.project_name}/#{local_path}"]
+        remote_obj.write(Pathname.new(local_path))
+      end
     end
 
     def upload_jar!
@@ -80,7 +91,9 @@ module Humboldt
       {
         :log_uri => s3_uri(log_path),
         :instances => instance_configuration(launch_options),
-        :steps => [step_configuration]
+        :steps => [step_configuration],
+        :bootstrap_actions => bootstrap_actions,
+        :visible_to_all_users => true
       }
     end
 
@@ -109,6 +122,30 @@ module Humboldt
       }
     end
 
+    def bootstrap_actions
+      remove_old_jruby_action = {
+        :name => 'remove_old_jruby',
+        :script_bootstrap_action => {
+          :path => s3_uri("#{@package.project_name}/#{BOOTSTRAP_TASK_FILES[:remove_old_jruby]}")
+        }
+      }
+
+      # http://hadoop.apache.org/docs/r1.0.3/mapred-default.html
+      configure_hadoop_action = {
+        :name => 'configure_hadoop',
+        :script_bootstrap_action => {
+          :path => 's3://eu-west-1.elasticmapreduce/bootstrap-actions/configure-hadoop',
+          :args => [
+            '-m', 'mapred.job.reuse.jvm.num.tasks=-1',
+            '-m', 'mapred.map.tasks.speculative.execution=false',
+            '-m', 'mapred.reduce.tasks.speculative.execution=false'
+          ]
+        }
+      }
+
+      [remove_old_jruby_action, configure_hadoop_action]
+    end
+
     def step_configuration
       {
         :name => @package.project_name,
@@ -120,7 +157,6 @@ module Humboldt
             s3_uri(output_path, protocol: 's3n')
           ]
         }
-
       }
     end
 

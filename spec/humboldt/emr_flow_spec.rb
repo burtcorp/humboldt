@@ -13,9 +13,14 @@ module Humboldt
       stub(:remote_jar_file)
     end
 
+    let :remote_bootstrap_file do
+      stub(:remote_bootstrap_file)
+    end
+
     let :bucket_objects do
       bo = stub(:bucket_objects)
       bo.stub(:[]).with('my_awesome_job/my_awesome_job.jar').and_return(remote_jar_file)
+      bo.stub(:[]).with('my_awesome_job/config/emr-bootstrap/remove_old_jruby.sh').and_return(remote_bootstrap_file)
       bo
     end
 
@@ -36,8 +41,18 @@ module Humboldt
     end
 
     describe '#prepare!' do
+      before do
+        remote_jar_file.stub(:write)
+        remote_bootstrap_file.stub(:write)
+      end
+
       it 'uploads the JAR to S3' do
         remote_jar_file.should_receive(:write).with(Pathname.new(package.jar_path))
+        flow.prepare!
+      end
+
+      it 'uploads bootstrap task scripts to S3' do
+        remote_bootstrap_file.should_receive(:write).with(Pathname.new('config/emr-bootstrap/remove_old_jruby.sh'))
         flow.prepare!
       end
     end
@@ -84,8 +99,30 @@ module Humboldt
           configuration.should have_key(:log_uri)
           configuration.should have_key(:instances)
           configuration.should have_key(:steps)
+          configuration.should have_key(:bootstrap_actions)
         end
         flow.run!
+      end
+
+      context 'bootstrap tasks' do
+        before do
+          emr.job_flows.stub(:create) do |name, configuration|
+            @configuration = configuration
+          end
+        end
+
+        it 'adds a bootrap task for removing old JRuby JARs' do
+          flow.run!
+          action = @configuration[:bootstrap_actions].find { |action| action[:name] == 'remove_old_jruby' }
+          action[:script_bootstrap_action][:path].should == 's3://job-bucket/my_awesome_job/config/emr-bootstrap/remove_old_jruby.sh'
+        end
+
+        it 'adds a bootrap task for configuring Hadoop' do
+          flow.run!
+          action = @configuration[:bootstrap_actions].find { |action| action[:name] == 'configure_hadoop' }
+          action[:script_bootstrap_action].should have_key(:path)
+          action[:script_bootstrap_action].should have_key(:args)
+        end
       end
 
       context 'job configuration' do
