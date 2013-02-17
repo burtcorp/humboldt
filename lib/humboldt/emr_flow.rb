@@ -61,7 +61,7 @@ module Humboldt
     def upload_bootstrap_task_files!
       BOOTSTRAP_TASK_FILES.values.each do |local_path|
         remote_obj = @job_bucket.objects["#{@package.project_name}/#{local_path}"]
-        remote_obj.write(Pathname.new(local_path))
+        remote_obj.write(Pathname.new(File.expand_path(local_path, "#{__FILE__}/../../..")))
       end
     end
 
