@@ -9,7 +9,7 @@ namespace :release do
   task :tag do
     spec = eval(File.read("#{PROJECT_NAME}.gemspec"))
     version_string = "v#{spec.version.to_s}"
-    unless %x(git tag -l).include?(version_string)
+    unless %x(git tag -l).split("\n").include?(version_string)
       system %(git tag -a #{version_string} -m #{version_string})
     end
     system %(git push && git push --tags)
