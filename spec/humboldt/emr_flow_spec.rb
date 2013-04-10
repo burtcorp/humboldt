@@ -52,7 +52,9 @@ module Humboldt
       end
 
       it 'uploads bootstrap task scripts to S3' do
-        remote_bootstrap_file.should_receive(:write).with(Pathname.new('config/emr-bootstrap/remove_old_jruby.sh'))
+        remote_bootstrap_file.should_receive(:write) do |path|
+          path.to_s.should end_with('config/emr-bootstrap/remove_old_jruby.sh')
+        end
         flow.prepare!
       end
     end
