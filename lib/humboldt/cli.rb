@@ -67,7 +67,11 @@ module Humboldt
       end
       say_status(:upload, flow.jar_uri)
       flow.prepare!
-      job_flow = flow.run!
+      job_flow = flow.run!(
+        bid_price: options[:bid_price],
+        instance_count: options[:instance_count],
+        instance_type: options[:instance_type]
+      )
       File.open('.humboldtjob', 'w') { |io| io.puts(job_flow.job_flow_id) }
       say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})
     end
