@@ -44,10 +44,6 @@ module Humboldt
 
     EC2_KEY_NAME = 'burt-id_rsa-gsg-keypair'.freeze
     HADOOP_VERSION = '1.0.3'.freeze
-    MASTER_INSTANCE_TYPE = 'm1.small'.freeze
-    DEFAULT_CORE_INSTANCE_TYPE = 'c1.xlarge'.freeze
-    DEFAULT_BID_PRICE = '0.2'.freeze
-    DEFAULT_CORE_INSTANCE_COUNT = 4
     BOOTSTRAP_TASK_FILES = {
       :remove_old_jruby => 'config/emr-bootstrap/remove_old_jruby.sh'
     }.freeze
@@ -101,24 +97,7 @@ module Humboldt
       {
         :ec2_key_name => EC2_KEY_NAME,
         :hadoop_version => HADOOP_VERSION,
-        :instance_groups => [
-          {
-            :name => 'Master Group',
-            :instance_role => 'MASTER',
-            :instance_count => 1,
-            :instance_type => MASTER_INSTANCE_TYPE,
-            :market => 'SPOT',
-            :bid_price => launch_options[:bid_price] || DEFAULT_BID_PRICE
-          },
-          {
-            :name => 'Core Group',
-            :instance_role => 'CORE',
-            :instance_count => launch_options[:instance_count] || DEFAULT_CORE_INSTANCE_COUNT,
-            :instance_type => launch_options[:instance_type] || DEFAULT_CORE_INSTANCE_TYPE,
-            :market => 'SPOT',
-            :bid_price => launch_options[:bid_price] || DEFAULT_BID_PRICE
-          }
-        ]
+        :instance_groups => InstanceGroupConfiguration.create(launch_options)
       }
     end
 
@@ -162,6 +141,59 @@ module Humboldt
 
     def create_flow!(launch_options)
       job_flow = @emr.job_flows.create(@package.project_name, job_flow_configuration(launch_options))
+    end
+
+    module InstanceGroupConfiguration
+      extend self
+
+      # TODO: add 'task' group when support is added for 'tasks' 
+      INSTANCE_GROUPS = %w[master core].freeze
+      MASTER_INSTANCE_TYPE = 'm1.small'.freeze
+      DEFAULT_CORE_INSTANCE_TYPE = 'c1.xlarge'.freeze
+      DEFAULT_BID_PRICE = '0.2'.freeze
+      DEFAULT_CORE_INSTANCE_COUNT = 4
+
+      INSTANCE_TYPE_MAPPINGS = {
+        'master' => MASTER_INSTANCE_TYPE,
+        'core'   => DEFAULT_CORE_INSTANCE_TYPE
+      }.freeze
+
+      INSTANCE_COUNT_MAPPINGS = {
+        'master' => 1,
+        'core' => DEFAULT_CORE_INSTANCE_COUNT
+      }.freeze
+
+      def base_configuration(group)
+        {:name => "#{group.capitalize} Group", :instance_role => group.upcase}
+      end
+
+      def configure_type_and_count!(group, base, options)
+        case group
+        when 'core'
+          base[:instance_type] = options[:instance_type] 
+          base[:instance_count] = options[:instance_count]
+        end
+
+        base[:instance_type] ||= INSTANCE_TYPE_MAPPINGS[group]
+        base[:instance_count] ||= INSTANCE_COUNT_MAPPINGS[group]
+      end
+
+      def configure_market!(group, configuration, options)
+        return unless options.has_key?(:spot_instances)
+        return if options[:spot_instances].any? && !options[:spot_instances].include?(group)
+
+        configuration[:market] = 'SPOT'
+        configuration[:bid_price] = options[:bid_price] || DEFAULT_BID_PRICE
+      end
+
+      def create(options)
+        instance_groups = INSTANCE_GROUPS.map do |group|
+          configuration = base_configuration(group)
+          configure_type_and_count!(group, configuration, options)
+          configure_market!(group, configuration, options)
+          configuration
+        end
+      end
     end
   end
 end

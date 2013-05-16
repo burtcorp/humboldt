@@ -165,8 +165,8 @@ module Humboldt
                 :instance_role => 'MASTER',
                 :instance_count => 1,
                 :instance_type => 'm1.small',
-                :market => 'SPOT',
-                :bid_price => '0.2'
+                :market => nil,
+                :bid_price => nil
               },
               {
                 :name => 'Core Group',
@@ -189,6 +189,51 @@ module Humboldt
           master_group[:instance_count].should == 1
           master_group[:instance_type].should == 'm1.small'
           master_group[:bid_price].should == '0.01'
+        end
+
+        it 'allows using an on demand instance as master node' do
+          flow.run!(:spot_instances=> ['core'])
+          master_group, core_group = @configuration[:instances][:instance_groups]
+          master_group[:market].should be_nil
+          master_group.should_not have_key(:market)
+          master_group.should_not have_key(:bid_price)
+
+          core_group[:market].should == 'SPOT'
+          core_group[:bid_price].should == '0.2'
+        end
+
+        describe EmrFlow::InstanceGroupConfiguration do
+          describe '.create' do
+            context 'when spot_instances is nil' do
+              it 'configures all instances as on demand instances' do
+                flow.run!
+                master_group, core_group = @configuration[:instances][:instance_groups]
+                master_group.should_not have_key(:market)
+                master_group.should_not have_key(:bid_price)
+                core_group.should_not have_key(:market)
+                core_group.should_not have_key(:bid_price)
+              end
+            end
+
+            context 'when spot_instances is empty' do
+              it 'configures all instance groups as spot instances' do
+                flow.run!(:spot_instances => [])
+                master_group, core_group = @configuration[:instances][:instance_groups]
+                master_group[:market].should == 'SPOT'
+                core_group[:market].should == 'SPOT'
+              end
+
+              it 'respects bid_price' do
+                flow.run!(:spot_instances => [], :bid_price => '0.5')
+                master_group, core_group = @configuration[:instances][:instance_groups]
+                master_group[:bid_price].should == '0.5'
+                core_group[:bid_price].should == '0.5'
+              end
+            end
+
+            context 'when spot_instances contains explicit groups' do
+            end
+          end
         end
       end
     end

@@ -54,7 +54,7 @@ module Humboldt
     method_option :job_bucket, :type => :string, :default => 'humboldt-emr', :desc => 'S3 bucket to upload JAR, output logs and results into'
     method_option :instance_count, :type => :numeric, :default => 4, :desc => 'the number of worker instances to launch'
     method_option :instance_type, :type => :string, :default => 'c1.xlarge', :desc => 'the worker instance type, see http://ec2pricing.iconara.info/ for available types'
-    method_option :spot_instances, :type => :boolean, :default => true, :desc => 'use spot instances, set to false to use on-demand instances'
+    method_option :spot_instances, :type => :array, :default => [], :desc => 'use spot instances, set to false to use on-demand instances'
     method_option :bid_price, :type => :string, :default => '0.2', :desc => 'how much to bid for spot instances, see http://ec2pricing.iconara.info/ for current spot prices'
     method_option :poll, :type => :boolean, :default => false, :desc => 'poll the job\'s status every 10s and display'
     def run_emr
@@ -70,7 +70,8 @@ module Humboldt
       job_flow = flow.run!(
         bid_price: options[:bid_price],
         instance_count: options[:instance_count],
-        instance_type: options[:instance_type]
+        instance_type: options[:instance_type],
+        spot_instances: options[:spot_instances]
       )
       File.open('.humboldtjob', 'w') { |io| io.puts(job_flow.job_flow_id) }
       say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})
