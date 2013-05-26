@@ -165,57 +165,51 @@ module Humboldt
                 :instance_role => 'MASTER',
                 :instance_count => 1,
                 :instance_type => 'm1.small',
-                :market => nil,
-                :bid_price => nil
+                :market => 'ON_DEMAND'
               },
               {
                 :name => 'Core Group',
                 :instance_role => 'CORE',
                 :instance_count => 4,
                 :instance_type => 'c1.xlarge',
-                :market => 'SPOT',
-                :bid_price => '0.2'
+                :market => 'ON_DEMAND'
               }
             ]
           }
         end
 
         it 'allows changes to the instance configuration' do
-          flow.run!(instance_count: 8, instance_type: 'cc2.8xlarge', bid_price: '0.01')
+          flow.run!(instance_count: 8, instance_type: 'cc2.8xlarge')
           master_group, core_group = @configuration[:instances][:instance_groups]
           core_group[:instance_count].should == 8
           core_group[:instance_type].should == 'cc2.8xlarge'
-          core_group[:bid_price].should == '0.01'
           master_group[:instance_count].should == 1
           master_group[:instance_type].should == 'm1.small'
-          master_group[:bid_price].should == '0.01'
         end
 
         it 'allows using an on demand instance as master node' do
           flow.run!(:spot_instances=> ['core'])
           master_group, core_group = @configuration[:instances][:instance_groups]
-          master_group[:market].should be_nil
-          master_group.should_not have_key(:market)
+          master_group[:market].should == 'ON_DEMAND'
           master_group.should_not have_key(:bid_price)
-
           core_group[:market].should == 'SPOT'
           core_group[:bid_price].should == '0.2'
         end
 
         describe EmrFlow::InstanceGroupConfiguration do
           describe '.create' do
-            context 'when spot_instances is nil' do
+            context 'when :spot_instances is not present' do
               it 'configures all instances as on demand instances' do
                 flow.run!
                 master_group, core_group = @configuration[:instances][:instance_groups]
-                master_group.should_not have_key(:market)
+                master_group[:market].should == 'ON_DEMAND'
                 master_group.should_not have_key(:bid_price)
-                core_group.should_not have_key(:market)
+                core_group[:market].should == 'ON_DEMAND'
                 core_group.should_not have_key(:bid_price)
               end
             end
 
-            context 'when spot_instances is empty' do
+            context 'when :spot_instances is an empty list' do
               it 'configures all instance groups as spot instances' do
                 flow.run!(:spot_instances => [])
                 master_group, core_group = @configuration[:instances][:instance_groups]
@@ -231,7 +225,25 @@ module Humboldt
               end
             end
 
-            context 'when spot_instances contains explicit groups' do
+            context 'when :spot_instances is a non-empty list' do
+              it 'configures groups present in list as spot instances' do
+                flow.run!(:spot_instances => ['core'])
+                master_group, core_group = @configuration[:instances][:instance_groups]
+                core_group[:market].should == 'SPOT'
+              end
+
+              it 'respects bid_price for spot instances' do
+                flow.run!(:spot_instances => ['core'], :bid_price => '0.001')
+                master_group, core_group = @configuration[:instances][:instance_groups]
+                core_group[:bid_price].should == '0.001'
+              end
+
+              it 'configures groups not present in list as on demand instances' do
+                flow.run!(:spot_instances => ['core'])
+                master_group, core_group = @configuration[:instances][:instance_groups]
+                master_group[:market].should == 'ON_DEMAND'
+                master_group.should_not have_key(:bid_price)
+              end
             end
           end
         end

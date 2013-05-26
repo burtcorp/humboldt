@@ -167,30 +167,30 @@ module Humboldt
         {:name => "#{group.capitalize} Group", :instance_role => group.upcase}
       end
 
-      def configure_type_and_count!(group, base, options)
-        case group
-        when 'core'
-          base[:instance_type] = options[:instance_type] 
-          base[:instance_count] = options[:instance_count]
+      def configure_type_and_count(group, configuration, options = {})
+        if group == 'core'
+          configuration[:instance_type] = options[:instance_type]
+          configuration[:instance_count] = options[:instance_count]
         end
 
-        base[:instance_type] ||= INSTANCE_TYPE_MAPPINGS[group]
-        base[:instance_count] ||= INSTANCE_COUNT_MAPPINGS[group]
+        configuration[:instance_type] ||= INSTANCE_TYPE_MAPPINGS[group]
+        configuration[:instance_count] ||= INSTANCE_COUNT_MAPPINGS[group]
       end
 
-      def configure_market!(group, configuration, options)
-        return unless options.has_key?(:spot_instances)
-        return if options[:spot_instances].any? && !options[:spot_instances].include?(group)
-
-        configuration[:market] = 'SPOT'
-        configuration[:bid_price] = options[:bid_price] || DEFAULT_BID_PRICE
+      def configure_market(group, configuration, spot_instances, bid_price)
+        if spot_instances && (spot_instances.empty? || spot_instances.include?(group))
+          configuration[:market] = 'SPOT'
+          configuration[:bid_price] = bid_price || DEFAULT_BID_PRICE
+        else
+          configuration[:market] = 'ON_DEMAND'
+        end
       end
 
       def create(options)
         instance_groups = INSTANCE_GROUPS.map do |group|
           configuration = base_configuration(group)
-          configure_type_and_count!(group, configuration, options)
-          configure_market!(group, configuration, options)
+          configure_type_and_count(group, configuration, options)
+          configure_market(group, configuration, options[:spot_instances], options[:bid_price])
           configuration
         end
       end
