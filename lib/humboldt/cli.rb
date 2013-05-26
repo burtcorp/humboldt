@@ -54,7 +54,7 @@ module Humboldt
     method_option :job_bucket, :type => :string, :default => 'humboldt-emr', :desc => 'S3 bucket to upload JAR, output logs and results into'
     method_option :instance_count, :type => :numeric, :default => 4, :desc => 'the number of worker instances to launch'
     method_option :instance_type, :type => :string, :default => 'c1.xlarge', :desc => 'the worker instance type, see http://ec2pricing.iconara.info/ for available types'
-    method_option :spot_instances, :type => :array, :default => [], :desc => 'use spot instances, set to false to use on-demand instances'
+    method_option :spot_instances, :type => :array, :lazy_default => [], :desc => 'use spot instances; if used without giving a value all instance groups will be spot instances, if given an explicit list only specified groups will be spot instances'
     method_option :bid_price, :type => :string, :default => '0.2', :desc => 'how much to bid for spot instances, see http://ec2pricing.iconara.info/ for current spot prices'
     method_option :poll, :type => :boolean, :default => false, :desc => 'poll the job\'s status every 10s and display'
     def run_emr
