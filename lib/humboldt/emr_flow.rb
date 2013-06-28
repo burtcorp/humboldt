@@ -146,7 +146,7 @@ module Humboldt
     module InstanceGroupConfiguration
       extend self
 
-      # TODO: add 'task' group when support is added for 'tasks' 
+      # TODO: add 'task' group when support is added for 'tasks'
       INSTANCE_GROUPS = %w[master core].freeze
       MASTER_INSTANCE_TYPE = 'm1.small'.freeze
       DEFAULT_CORE_INSTANCE_TYPE = 'c1.xlarge'.freeze
@@ -187,7 +187,7 @@ module Humboldt
       end
 
       def create(options)
-        instance_groups = INSTANCE_GROUPS.map do |group|
+        INSTANCE_GROUPS.map do |group|
           configuration = base_configuration(group)
           configure_type_and_count(group, configuration, options)
           configure_market(group, configuration, options[:spot_instances], options[:bid_price])
