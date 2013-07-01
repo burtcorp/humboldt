@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    humboldt (0.2.0-java)
+    humboldt (0.3.0-java)
       aws-sdk
       jruby-openssl
       json
