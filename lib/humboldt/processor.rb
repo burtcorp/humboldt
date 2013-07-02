@@ -81,9 +81,12 @@ module Humboldt
       if files && local_files
         work_dir = ENV['HADOOP_WORK_DIR']
         files.each_with_index do |file, i|
-          link = file.fragment
           target = local_files[i].to_s
-          FileUtils.ln_s(target, File.join(work_dir, link))
+          link_path = File.join(work_dir, file.fragment)
+          FileUtils.mkdir_p(File.dirname(link_path))
+          unless File.exists?(link_path)
+            FileUtils.ln_s(target, link_path)
+          end
         end
       end
     end
