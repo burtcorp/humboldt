@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    humboldt (0.3.0-java)
+    humboldt (0.3.1-java)
       aws-sdk
       jruby-openssl
       json
@@ -28,7 +28,7 @@ GEM
       multi_json (~> 1.0)
       multi_xml
     httpclient (2.3.0.1)
-    jruby-openssl (0.7.7)
+    jruby-openssl (0.8.2)
       bouncy-castle-java (>= 1.5.0146.1)
     json (1.7.5-java)
     method_source (0.8)
