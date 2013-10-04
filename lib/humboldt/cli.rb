@@ -27,9 +27,10 @@ module Humboldt
     method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
     method_option :data_path, :type => :string, :default => 'data/completes', :desc => 'input paths will be resolved against this path'
     method_option :silent, :type => :boolean, :default => true, :desc => 'silence the hadoop command\'s logging'
+    method_option :skip_package, :type => :boolean, :default => false, :desc => 'don\'t package the JAR, use only if you haven\'t changed anything since the last run'
     def run_local
       check_job!
-      invoke(:package, [], {})
+      invoke(:package, [], {}) unless options.skip_package?
       output_path = options[:output] || "data/#{job_config}/output"
       output_path_parent = File.dirname(output_path)
       if options.cleanup_before?
@@ -57,16 +58,20 @@ module Humboldt
     method_option :spot_instances, :type => :array, :lazy_default => [], :desc => 'use spot instances; either an explicit list of instance groups or no value to run all groups as spot instances'
     method_option :bid_price, :type => :string, :default => '0.2', :desc => 'how much to bid for spot instances, see http://ec2pricing.iconara.info/ for current spot prices'
     method_option :poll, :type => :boolean, :default => false, :desc => 'poll the job\'s status every 10s and display'
+    method_option :skip_package, :type => :boolean, :default => false, :desc => 'don\'t package the JAR, use only if you haven\'t changed anything since the last run'
+    method_option :skip_prepare, :type => :boolean, :default => false, :desc => 'don\'t upload the JAR and bootstrap files, use only if you haven\'t changed anything since the last run'
     def run_emr
       check_job!
-      invoke(:package, [], {})
+      invoke(:package, [], {}) unless options.skip_package?
       flow = EmrFlow.new(job_config, options[:input], job_package, emr, data_bucket, job_bucket, options[:output])
       if options.cleanup_before?
         say_status(:remove, flow.output_uri)
         flow.cleanup!
       end
-      say_status(:upload, flow.jar_uri)
-      flow.prepare!
+      unless options.skip_prepare?
+        say_status(:upload, flow.jar_uri)
+        flow.prepare!
+      end
       job_flow = flow.run!(
         bid_price: options[:bid_price],
         instance_count: options[:instance_count],
