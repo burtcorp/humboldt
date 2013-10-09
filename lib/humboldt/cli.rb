@@ -125,7 +125,7 @@ module Humboldt
     end
 
     def emr
-      @emr ||= AWS::EMR.new(emr_endpoint: 'eu-west-1.elasticmapreduce.amazonaws.com')
+      @emr ||= AWS::EMR.new(region: 'eu-west-1')
     end
 
     def job_bucket
