@@ -9,7 +9,7 @@ PATH
       thor
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     aws-sdk (1.16.1)
       json (~> 1.4)
