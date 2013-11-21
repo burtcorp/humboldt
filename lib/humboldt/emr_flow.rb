@@ -5,8 +5,9 @@ module Humboldt
     attr_reader :output_path
 
     def initialize(*args)
-      @job_name, @input_glob, @package, @emr, @data_bucket, @job_bucket, @output_path = args
+      @job_name, @input_glob, @package, @emr, @data_bucket, @job_bucket, @output_path, @extra_job_args = args
       @output_path ||= "#{@package.project_name}/#{@job_name}/output"
+      @extra_job_args ||= []
     end
 
     def prepare!
@@ -133,7 +134,8 @@ module Humboldt
           :args => [
             @job_name,
             s3_uri(@input_glob, protocol: 's3n', bucket: @data_bucket),
-            s3_uri(output_path, protocol: 's3n')
+            s3_uri(output_path, protocol: 's3n'),
+            *@extra_job_args
           ]
         }
       }

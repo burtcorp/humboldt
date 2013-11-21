@@ -28,6 +28,7 @@ module Humboldt
     method_option :data_path, :type => :string, :default => 'data/completes', :desc => 'input paths will be resolved against this path'
     method_option :silent, :type => :boolean, :default => true, :desc => 'silence the hadoop command\'s logging'
     method_option :skip_package, :type => :boolean, :default => false, :desc => 'don\'t package the JAR, use only if you haven\'t changed anything since the last run'
+    method_option :extra_hadoop_args, :type => :array, :default => [], :desc => 'extra arguments to on pass to hadoop'
     def run_local
       check_job!
       invoke(:package, [], {}) unless options.skip_package?
@@ -43,7 +44,7 @@ module Humboldt
       end
       input_glob = File.join(options[:data_path], options[:input])
       hadoop_config_path = options[:hadoop_config] || default_hadoop_config_path
-      run_command('hadoop', 'jar', project_jar, '-conf', hadoop_config_path, job_config, input_glob, output_path)
+      run_command('hadoop', 'jar', project_jar, '-conf', hadoop_config_path, job_config, input_glob, output_path, *options[:extra_hadoop_args])
     end
 
     desc 'run-emr', 'run a job in Elastic MapReduce'
@@ -60,10 +61,11 @@ module Humboldt
     method_option :poll, :type => :boolean, :default => false, :desc => 'poll the job\'s status every 10s and display'
     method_option :skip_package, :type => :boolean, :default => false, :desc => 'don\'t package the JAR, use only if you haven\'t changed anything since the last run'
     method_option :skip_prepare, :type => :boolean, :default => false, :desc => 'don\'t upload the JAR and bootstrap files, use only if you haven\'t changed anything since the last run'
+    method_option :extra_hadoop_args, :type => :array, :default => [], :desc => 'extra arguments to pass on to hadoop'
     def run_emr
       check_job!
       invoke(:package, [], {}) unless options.skip_package?
-      flow = EmrFlow.new(job_config, options[:input], job_package, emr, data_bucket, job_bucket, options[:output])
+      flow = EmrFlow.new(job_config, options[:input], job_package, emr, data_bucket, job_bucket, options[:output], options[:extra_hadoop_args])
       if options.cleanup_before?
         say_status(:remove, flow.output_uri)
         flow.cleanup!
