@@ -46,6 +46,7 @@ namespace :setup do
     Dir.chdir('spec/integration/test_project') do
       command = (<<-END).lines.map(&:strip).join(' && ')
       rvm gemset create humboldt-test_project
+      rvm $RUBY_VERSION@humboldt-test_project do gem install bundler
       rvm $RUBY_VERSION@humboldt-test_project do bundle install
       END
       puts command
