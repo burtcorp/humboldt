@@ -6,6 +6,9 @@ require 'spec_helper'
 describe 'Packaging and running a project' do
   def isolated_run(dir, cmd)
     Dir.chdir(dir) do
+      Bundler.clean_system('find $PWD')
+      Bundler.clean_system("echo PATH=$GEM_HOME/bin:$PWD/../../../tmp/hadoop-current/bin:$PATH HUMBOLDT_TEST_PROJECT_PATH=$PWD rvm $RUBY_VERSION@humboldt-test_project do env")
+      Bundler.clean_system("PATH=$GEM_HOME/bin:$PWD/../../../tmp/hadoop-current/bin:$PATH HUMBOLDT_TEST_PROJECT_PATH=$PWD rvm $RUBY_VERSION@humboldt-test_project do env")
       Bundler.clean_system("PATH=$GEM_HOME/bin:$PWD/../../../tmp/hadoop-current/bin:$PATH HUMBOLDT_TEST_PROJECT_PATH=$PWD rvm $RUBY_VERSION@humboldt-test_project do #{cmd}")
     end
   end
