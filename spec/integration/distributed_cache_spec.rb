@@ -11,7 +11,7 @@ describe 'Packaging and running a project' do
   end
 
   let :test_project_dir do
-    File.expand_path('../test_project', __FILE__)
+    File.expand_path('../../fixtures/test_project', __FILE__)
   end
 
   before :all do

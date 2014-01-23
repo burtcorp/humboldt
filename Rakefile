@@ -43,7 +43,7 @@ namespace :setup do
   end
 
   task :test_project do
-    Dir.chdir('spec/integration/test_project') do
+    Dir.chdir('spec/fixtures/test_project') do
       command = (<<-END).lines.map(&:strip).join(' && ')
       rvm gemset create humboldt-test_project
       rvm $RUBY_VERSION@humboldt-test_project do gem install bundler
@@ -72,6 +72,7 @@ require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new(:spec) do |r|
   r.rspec_opts = '--tty'
+  r.pattern = 'spec/{integration,humboldt}/**/*_spec.rb'
 end
 
 task :release => ['release:tag', 'release:gem']
