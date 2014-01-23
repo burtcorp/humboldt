@@ -1,5 +1,6 @@
 source 'https://rubygems.org/'
 
+gem 'rubydoop', :git => 'git://github.com/iconara/rubydoop.git', :branch => 'wip_default_gems'
 gem 'humboldt', :path => '../../..'
 
 group :development do
