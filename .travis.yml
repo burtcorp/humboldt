@@ -3,5 +3,4 @@ rvm:
   - jruby-19mode
 env:
   - HADOOP_RELEASE=hadoop-1.0.3/hadoop-1.0.3-bin
-bundler_args: --no-deployment
 script: 'rake setup && rake spec'
