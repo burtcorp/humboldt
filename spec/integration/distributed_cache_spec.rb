@@ -30,7 +30,7 @@ describe 'Packaging and running a project' do
 
   context 'Running the project' do
     before :all do
-      isolated_run(test_project_dir, "humboldt run-local --cleanup-before --data-path=data --input='input/*' 2>&1 | tee data/log")
+      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --data-path=data --input='input/*' 2>&1 | tee data/log")
     end
 
     context 'file caching' do
