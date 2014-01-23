@@ -1,2 +1,6 @@
+/tmp
 /.classpath
 /pkg
+/spec/integration/test_project/data
+/spec/integration/test_project/important.doc
+/spec/integration/test_project/another_file

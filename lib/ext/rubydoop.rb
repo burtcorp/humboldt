@@ -32,7 +32,7 @@ module Rubydoop
 
     def cache_file(file, options = {})
       symlink = options.fetch(:as, File.basename(file))
-      if local_mode?
+      if local_mode? && !Hadoop::Mapreduce::Job.instance_methods.include?(:add_cache_file)
         unless File.symlink?(symlink) && File.readlink(symlink) == file
           FileUtils.ln_s file, symlink
         end

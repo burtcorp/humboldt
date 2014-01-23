@@ -1,0 +1,7 @@
+language: ruby
+rvm:
+  - jruby-19mode
+env:
+  - HADOOP_RELEASE=hadoop-1.0.3/hadoop-1.0.3-bin
+  - HADOOP_RELEASE=hadoop-2.2.0/hadoop-2.2.0
+script: 'rake setup && rake spec'
