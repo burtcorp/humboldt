@@ -2,7 +2,20 @@
 
 require 'java'
 
-IO.foreach(File.expand_path('../../.classpath', __FILE__)) { |path| $CLASSPATH << path.chomp }
+begin
+  IO.foreach(File.expand_path('../../.classpath', __FILE__)) { |path| $CLASSPATH << path.chomp }
+  org.apache.hadoop.io.BytesWritable
+rescue Errno::ENOENT, NameError => e
+  if e.message['.classpath'] || e.message['org.apache.hadoop.io.BytesWritable']
+    STDERR.puts e.message
+    STDERR.puts
+    STDERR.puts "Missing or invalid .classpath, did you run:"
+    STDERR.puts
+    STDERR.puts "    rake setup"
+    STDERR.puts
+    exit 1
+  end
+end
 
 require 'bundler'; Bundler.setup(:default, :test)
 

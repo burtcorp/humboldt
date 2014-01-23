@@ -1,0 +1,33 @@
+PATH
+  remote: ../../..
+  specs:
+    humboldt (0.4.1-java)
+      aws-sdk (~> 1.16.0)
+      jruby-openssl
+      json
+      rubydoop
+      thor
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    aws-sdk (1.16.1)
+      json (~> 1.4)
+      nokogiri (< 1.6.0)
+      uuidtools (~> 2.1)
+    bouncy-castle-java (1.5.0147)
+    jruby-openssl (0.9.4)
+      bouncy-castle-java (>= 1.5.0147)
+    json (1.8.1-java)
+    nokogiri (1.5.11-java)
+    rake (10.1.0)
+    rubydoop (1.1.1)
+    thor (0.18.1)
+    uuidtools (2.1.4)
+
+PLATFORMS
+  java
+
+DEPENDENCIES
+  humboldt!
+  rake
