@@ -2,9 +2,6 @@
 
 require 'spec_helper'
 
-require_relative 'processor_shared_examples'
-
-
 module Humboldt
   class EchoReducer < Reducer
     input :long, :text
@@ -178,7 +175,5 @@ module Humboldt
         results.should == %w[setup reduce cleanup]
       end
     end
-
-    it_behaves_like 'all processors', DistributedCacheUsingReducer
   end
 end

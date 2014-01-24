@@ -2,9 +2,6 @@
 
 require 'spec_helper'
 
-require_relative 'processor_shared_examples'
-
-
 module Humboldt
   class ReversingTestMapper < Mapper
     input :long, :text
@@ -120,7 +117,5 @@ module Humboldt
         results.should == %w[setup map cleanup]
       end
     end
-
-    it_behaves_like 'all processors', DistributedCacheUsingMapper
   end
 end
