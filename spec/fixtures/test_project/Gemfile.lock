@@ -1,6 +1,6 @@
 GIT
-  remote: git://github.com/iconara/rubydoop.git
-  revision: ce507fdea8f48ffc00ca0c98074a9492f0628b9c
+  remote: git://github.com/bjorne/rubydoop.git
+  revision: ef7217aa081695b6766c772f6c7d778620451fb7
   branch: wip_default_gems
   specs:
     rubydoop (1.1.1)
