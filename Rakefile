@@ -1,7 +1,44 @@
 # encoding: utf-8
 
 require 'bundler/setup'
+require 'ant'
 
+namespace :build do
+  source_dir = 'ext/src'
+  build_dir = 'ext/build'
+  ruby_dir = 'lib'
+
+  task :setup do
+    mkdir_p build_dir
+    ant.path :id => 'compile.class.path' do
+      pathelement :location => File.join(ENV['MY_RUBY_HOME'], 'lib', 'jruby.jar')
+      File.foreach(File.expand_path('../.classpath', __FILE__)) do |path|
+        pathelement :location => path.chop!
+      end
+    end
+  end
+
+  task :compile => :setup do
+    ant.javac :destdir => build_dir, :includeantruntime => 'no', :target => '1.6', :source => '1.6', :debug => 'on' do
+      classpath :refid => 'compile.class.path'
+      src { pathelement :location => source_dir }
+    end
+  end
+
+  task :jars => :compile do
+    ant.jar :destfile => 'lib/humboldt.jar', :basedir => build_dir do
+      fileset :dir => build_dir, :includes => '**/*.class'
+    end
+  end
+
+  task :clean do
+    rm_rf build_dir
+    rm Dir['lib/humboldt*.jar']
+  end
+end
+
+desc 'Build the lib/humboldt.jar'
+task :build => 'build:jars'
 
 namespace :release do
   PROJECT_NAME = Dir['*.gemspec'].first.split('.').first
