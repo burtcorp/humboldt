@@ -50,7 +50,9 @@ module Humboldt
       @in_value = input_value_accessor
       @out_key = output_key_accessor
       @out_value = output_value_accessor
-      create_symlinks!
+      unless Hadoop::Mapreduce::Job.instance_methods.include?(:add_cache_file)
+        create_symlinks!
+      end
       instance_setup
     end
 
