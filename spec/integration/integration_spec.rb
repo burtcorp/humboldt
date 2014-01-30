@@ -55,16 +55,22 @@ describe 'Packaging and running a project' do
 
   context 'Running the project' do
     before :all do
-      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --skip-package --data-path=data --input='input/*' 2>&1 | tee data/log")
+      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --skip-package --data-path=data --input='input' 2>&1 | tee data/log")
     end
 
-    context 'file caching' do
+    let :log do
+      File.read('data/log')
+    end
+
+    context 'file caching job' do
       it 'successfully reads cached files from mapper' do
-        File.readlines('data/test_project/output/part-r-00000').first.should == "mapper\tsecrit/not so secrit\n"
+        File.readlines('data/test_project/output/cache/part-r-00000').first.should == "mapper\tsecrit/not so secrit\n"
       end
 
       it 'successfully reads cached files from reducer' do
-        File.readlines('data/test_project/output/part-r-00000').last.should == "reducer\tsecrit/not so secrit\n"
+        File.readlines('data/test_project/output/cache/part-r-00000').last.should == "reducer\tsecrit/not so secrit\n"
+      end
+    end
       end
     end
   end
