@@ -21,6 +21,10 @@ describe 'Packaging and running a project' do
     FileUtils.rm_rf File.join(test_project_dir, 'important.doc')
     FileUtils.rm_rf File.join(test_project_dir, 'another_file')
     FileUtils.rm_rf File.join(test_project_dir, 'Gemfile.lock')
+
+    isolated_run(test_project_dir, "gem install ../../../pkg/*.gem")
+    isolated_run(test_project_dir, "bundle install")
+    isolated_run(test_project_dir, "bundle exec humboldt package")
   end
 
   around do |example|
@@ -29,11 +33,23 @@ describe 'Packaging and running a project' do
     end
   end
 
+  context 'Project package' do
+    let :jar do
+      Java::JavaUtilJar::JarFile.new(Java::JavaIo::File.new(File.expand_path('build/test_project.jar')))
+    end
+
+    let :jar_entries do
+      jar.entries.to_a.map(&:name)
+    end
+
+    it 'includes the built humboldt JAR file' do
+      jar_entries.should include('lib/humboldt.jar')
+    end
+  end
+
   context 'Running the project' do
     before :all do
-      isolated_run(test_project_dir, "gem install ../../../pkg/*.gem")
-      isolated_run(test_project_dir, "bundle install")
-      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --data-path=data --input='input/*' 2>&1 | tee data/log")
+      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --skip-package --data-path=data --input='input/*' 2>&1 | tee data/log")
     end
 
     context 'file caching' do
