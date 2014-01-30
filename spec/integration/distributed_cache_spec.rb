@@ -20,6 +20,7 @@ describe 'Packaging and running a project' do
     FileUtils.rm_rf File.join(test_project_dir, 'data/log')
     FileUtils.rm_rf File.join(test_project_dir, 'important.doc')
     FileUtils.rm_rf File.join(test_project_dir, 'another_file')
+    FileUtils.rm_rf File.join(test_project_dir, 'Gemfile.lock')
   end
 
   around do |example|
@@ -30,6 +31,8 @@ describe 'Packaging and running a project' do
 
   context 'Running the project' do
     before :all do
+      isolated_run(test_project_dir, "gem install ../../../pkg/*.gem")
+      isolated_run(test_project_dir, "bundle install")
       isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --data-path=data --input='input/*' 2>&1 | tee data/log")
     end
 

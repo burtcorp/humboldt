@@ -92,7 +92,6 @@ namespace :setup do
       command = (<<-END).lines.map(&:strip).join(' && ')
       rvm gemset create humboldt-test_project
       rvm $RUBY_VERSION@humboldt-test_project do gem install bundler
-      rvm $RUBY_VERSION@humboldt-test_project do bundle install --deployment
       END
       puts command
       Bundler.clean_system(command)
