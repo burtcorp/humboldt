@@ -21,6 +21,8 @@ end
 cc = Rubydoop::ConfigurationDefinition.new
 cc.job 'test combined text input' do
   input "#{cc.arguments[0]}/combined_text", format: :combined_text
+  set 'mapreduce.input.fileinputformat.split.maxsize', 32 * (1024 ** 2)
+
   output "#{cc.arguments[1]}/combined_text"
 
   mapper CombinedTextTest::Mapper
