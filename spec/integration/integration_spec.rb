@@ -71,6 +71,18 @@ describe 'Packaging and running a project' do
         File.readlines('data/test_project/output/cache/part-r-00000').last.should == "reducer\tsecrit/not so secrit\n"
       end
     end
+
+    context 'combined text input job' do
+      it 'combines both input files into a single map task (Mapper setup block only invoked once)' do
+        log.scan(/!!! combined mapper setup/).length.should == 1
+      end
+
+      it 'prints a warning about the combined text input only being compatible with Hadoop 2.2.0' do
+        log.should include('Warning! Using `format: :combined_text` will not work with remote input paths (e.g. S3) and Hadoop 1.x.')
+      end
+
+      it 'outputs the expected result' do
+        File.readlines('data/test_project/output/combined_text/part-r-00000').last.should == "key\t1 2\n"
       end
     end
   end
