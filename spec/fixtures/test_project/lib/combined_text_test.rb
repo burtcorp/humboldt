@@ -17,7 +17,7 @@ module CombinedTextTest
     output :text, :text
 
     reduce do |key, values|
-      emit key, values.to_a.join(' ')
+      emit key, values.to_a.sort.join(' ')
     end
   end
 end
