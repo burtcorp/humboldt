@@ -40,7 +40,7 @@ end
 desc 'Build the lib/humboldt.jar'
 task :build => 'build:jars'
 
-namespace :release do
+namespace :gem do
   PROJECT_NAME = Dir['*.gemspec'].first.split('.').first
 
   task :tag do
@@ -52,11 +52,19 @@ namespace :release do
     system %(git push && git push --tags)
   end
 
-  task :gem do
+  task :build do
     mkdir_p 'pkg'
-    system %(gem build #{PROJECT_NAME}.gemspec && gem inabox #{PROJECT_NAME}-*.gem && mv #{PROJECT_NAME}-*.gem pkg)
+    system %(gem build #{PROJECT_NAME}.gemspec && mv #{PROJECT_NAME}-*.gem pkg)
   end
+
+  task :inabox => :build do
+    system %(gem inabox pkg/#{PROJECT_NAME}-*.gem)
+  end
+
+  desc "Tag and release a new gem inabox"
+  task :release => [:tag, :inabox]
 end
+task 'gem:build' => 'build:jars'
 
 namespace :setup do
   hadoop_release = ENV['HADOOP_RELEASE'] || 'hadoop-1.0.3/hadoop-1.0.3-bin'
@@ -112,4 +120,5 @@ RSpec::Core::RakeTask.new(:spec) do |r|
   r.pattern = 'spec/{integration,humboldt}/**/*_spec.rb'
 end
 
-task :release => ['release:tag', 'release:gem']
+desc "Run the specs"
+task :spec => 'gem:build'
