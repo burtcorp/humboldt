@@ -20,10 +20,10 @@ Gem::Specification.new do |s|
   s.add_dependency 'rubydoop'
   s.add_dependency 'json'
   s.add_dependency 'thor'
-  s.add_dependency 'aws-sdk', '~> 1.16.0'
+  s.add_dependency 'aws-sdk', '>= 1.16.0', '< 1.33.0'
   s.add_dependency 'jruby-openssl'
-  
-  s.files         = Dir['lib/**/*.rb'] + Dir['bin/*'] + Dir['config/**/*']
+
+  s.files         = Dir['lib/**/*.{rb,jar}'] + Dir['bin/*'] + Dir['config/**/*']
   s.executables  = %w[humboldt]
   s.require_paths = %w[lib]
 end

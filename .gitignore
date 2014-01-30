@@ -1,3 +1,5 @@
 /tmp
 /.classpath
 /pkg
+/lib/*.jar
+/ext/build

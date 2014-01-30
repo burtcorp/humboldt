@@ -4,6 +4,8 @@ require 'fileutils'
 require 'rubydoop'
 require 'hadoop'
 
+require 'humboldt/java_lib'
+
 require 'ext/hadoop'
 require 'ext/rubydoop'
 

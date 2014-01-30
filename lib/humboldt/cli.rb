@@ -111,7 +111,7 @@ module Humboldt
     end
 
     def job_package
-      @job_package ||= Rubydoop::Package.new
+      @job_package ||= Rubydoop::Package.new(lib_jars: Dir[File.expand_path('../../**/*.jar', __FILE__)])
     end
 
     def job_config
