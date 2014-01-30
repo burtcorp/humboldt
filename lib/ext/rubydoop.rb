@@ -20,7 +20,7 @@ module Rubydoop
     def input(paths, options={})
       options = options.dup
       format = options[:format]
-      STDERR.puts "Warning! Using `format: :combined_text` will not work with remote input paths (e.g. S3) and Hadoop 1.x." if format == :combined_text
+      STDERR.puts "Warning! Using `format: :combined_text` will not work with remote input paths (e.g. S3) and Hadoop 1.x. Cf. https://issues.apache.org/jira/browse/MAPREDUCE-1806" if format == :combined_text
       unless format.nil? or format.is_a?(Class)
         class_name = format.to_s.gsub(/^.|_./) {|x| x[-1,1].upcase } + "InputFormat"
         options[:format] = Humboldt::JavaLib.const_get(class_name)

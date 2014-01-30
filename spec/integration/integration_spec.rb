@@ -78,7 +78,7 @@ describe 'Packaging and running a project' do
       end
 
       it 'prints a warning about the combined text input only being compatible with Hadoop 2.2.0' do
-        log.should include('Warning! Using `format: :combined_text` will not work with remote input paths (e.g. S3) and Hadoop 1.x.')
+        log.should match(/Warning! Using `format: :combined_text` will not work with remote input paths \(e.g. S3\) and Hadoop 1.x./)
       end
 
       it 'outputs the expected result' do

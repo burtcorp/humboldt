@@ -32,7 +32,10 @@ Hadoop does not perform well with many small input files, since each
 file is handled by its own map task, by default. Humboldt bundles an
 input format which combines files. Due to a bug in Hadoop 1.0.3 (and
 other versions), Hadoop 2.2.0 is required to run this for input files
-on S3. Example usage:
+on S3, see
+[this bug](https://issues.apache.org/jira/browse/MAPREDUCE-1806).
+
+Example usage:
 
 ```ruby
 Rubydoop.configure do |input_paths, output_path|
