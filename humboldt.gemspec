@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = 'humboldt'
 
-  s.add_dependency 'rubydoop'
+  s.add_dependency 'rubydoop', '~> 1.1.2'
   s.add_dependency 'json'
   s.add_dependency 'thor'
   s.add_dependency 'aws-sdk', '>= 1.16.0', '< 1.33.0'
