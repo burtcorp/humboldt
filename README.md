@@ -66,9 +66,6 @@ Run the tests with
 
     $ rake spec
 
-_NB!_ `rspec` or `rspec spec` will not work well since all specs for
-gems bundled with the test project will be run.
-
 ## Release a new gem
 
 Bump the version number in `lib/humboldt/version.rb`, run `rake gem:release`.
