@@ -41,99 +41,133 @@ module Humboldt
     end
 
     describe '#run' do
+      shared_examples 'output filter' do
+        it 'outputs progress reports' do
+          hadoop_stderr.string = counters_log
+          filter.run
+          shell.statuses.should include([:progress, 'map 100%, reduce 100%', nil])
+        end
+
+        it 'outputs formatted counters' do
+          hadoop_stderr.string = counters_log
+          filter.run
+          shell.tables.first.zip(expected_counters_table).each do |actual_line, expected_line|
+            actual_line.should == expected_line
+          end
+          shell.tables.first.should == expected_counters_table
+        end
+
+        it 'outputs Ruby exceptions' do
+          hadoop_stderr.string = ruby_error_log
+          filter.run
+          expected_ruby_errors.each do |line|
+            shell.statuses.should include([:error, line, :red])
+          end
+        end
+
+        it 'outputs Ruby warnings' do
+          hadoop_stderr.string = hadoop_error_log
+          filter.run
+          warning = shell.statuses.find { |_, msg, _| msg.include?('warning: already initialized constant ClassReader') }
+          warning.should_not be_nil
+          warning.first.should == :warning
+          warning.last.should == :yellow
+        end
+
+        it 'outputs Hadoop exceptions' do
+          hadoop_stderr.string = hadoop_error_log
+          filter.run
+          expected_hadoop_errors.each do |line|
+            shell.statuses.should include([:error, line, :red])
+          end
+        end
+
+        it 'does not report HADOOP_HOME warnings as errors' do
+          hadoop_stderr.string = counters_log
+          filter.run
+          shell.statuses.find { |_, msg, _| msg.include?('$HADOOP_HOME') }.should be_nil
+        end
+
+        it 'does not report spurious Hadoop output as errors' do
+          hadoop_stderr.string = counters_log
+          filter.run
+          error_statuses = shell.statuses.select { |status, _, _| status == :error }
+          error_statuses.find { |_, msg, _| msg.include?('Unable to load realm info from SCDynamicStore') }.should be_nil
+          error_statuses.find { |_, msg, _| msg.include?('Unable to load native-hadoop library') }.should be_nil
+          error_statuses.find { |_, msg, _| msg.include?('Snappy native library not loaded') }.should be_nil
+        end
+      end
+
       let :inline_data do
         File.readlines(__FILE__).drop_while { |line| !line.start_with?('__END') }.drop(1)
       end
 
-      let :counters_log do
-        lines = inline_data.drop_while { |line| !line.start_with?('%%% COUNTERS LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
-        lines.join('')
+      context 'hadoop 1.0.3' do
+        it_behaves_like 'output filter' do
+          let :counters_log do
+            lines = inline_data.drop_while { |line| !line.start_with?('%%% COUNTERS LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
+            lines.join('')
+          end
+
+
+          let :ruby_error_log do
+            lines = inline_data.drop_while { |line| !line.start_with?('%%% RUBY ERROR LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
+            lines.join('')
+          end
+
+          let :hadoop_error_log do
+            lines = inline_data.drop_while { |line| !line.start_with?('%%% HADOOP ERROR LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
+            lines.join('')
+          end
+
+          let :expected_counters_table do
+            [
+              ['Rubydoop',                    'JRuby runtimes created',                     2],
+              ['',                            '',                                          ''],
+              ['File Output Format Counters', 'Bytes Written',                              8],
+              ['',                            '',                                          ''],
+              ['FileSystemCounters',          'FILE_BYTES_READ',                     46115331],
+              ['',                            'FILE_BYTES_WRITTEN',                  46526366],
+              ['',                            '',                                          ''],
+              ['File Input Format Counters',  'Bytes Read',                            214234],
+              ['',                            '',                                          ''],
+              ['Map-Reduce Framework',        'Map output materialized bytes',         417723],
+              ['',                            'Map input records',                        338],
+              ['',                            'Reduce shuffle bytes',                       0],
+              ['',                            'Spilled Records',                          676],
+              ['',                            'Map output bytes',                      416365],
+              ['',                            'Total committed heap usage (bytes)', 581795840],
+              ['',                            'SPLIT_RAW_BYTES',                          238],
+              ['',                            'Combine input records',                      0],
+              ['',                            'Reduce input records',                     338],
+              ['',                            'Reduce input groups',                      338],
+              ['',                            'Combine output records',                     0],
+              ['',                            'Reduce output records',                      0],
+              ['',                            'Map output records',                       338]
+            ]
+          end
+
+          let :expected_ruby_errors do
+            [
+              %{org.jruby.exceptions.RaiseException: (NoMethodError) undefined method `asdas' for #<DuplicatesFinder::JoinMultipleInputs:0x5d511019>},
+              %{  at RUBY.reduce(/tmp/hadoop-theo/hadoop-unjar8455542447103659575/duplicates_finder.rb:34)},
+            ]
+          end
+
+          let :expected_hadoop_errors do
+            [
+              'java.lang.NullPointerException',
+              '  at org.apache.hadoop.mapred.MapTask$MapOutputBuffer.collect(MapTask.java:1018)',
+              '  at org.apache.hadoop.mapred.MapTask$NewOutputCollector.write(MapTask.java:691)',
+              '  at org.apache.hadoop.mapreduce.TaskInputOutputContext.write(TaskInputOutputContext.java:80)',
+              '  at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)',
+            ]
+          end
+        end
       end
 
-      let :ruby_error_log do
-        lines = inline_data.drop_while { |line| !line.start_with?('%%% RUBY ERROR LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
-        lines.join('')
-      end
 
-      let :hadoop_error_log do
-        lines = inline_data.drop_while { |line| !line.start_with?('%%% HADOOP ERROR LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
-        lines.join('')
-      end
 
-      it 'outputs progress reports' do
-        hadoop_stderr.string = '12/10/04 15:59:07 INFO mapred.JobClient:  map 50% reduce 23%'
-        filter.run
-        shell.statuses.should include([:progress, 'map 50%, reduce 23%', nil])
-      end
-
-      it 'outputs formatted counters' do
-        hadoop_stderr.string = counters_log
-        filter.run
-        shell.tables.first.should == [
-          ['Rubydoop',                    'JRuby runtimes created',                     2],
-          ['',                            '',                                          ''],
-          ['File Output Format Counters', 'Bytes Written',                              8],
-          ['',                            '',                                          ''],
-          ['FileSystemCounters',          'FILE_BYTES_READ',                     46115331],
-          ['',                            'FILE_BYTES_WRITTEN',                  46526366],
-          ['',                            '',                                          ''],
-          ['File Input Format Counters',  'Bytes Read',                            214234],
-          ['',                            '',                                          ''],
-          ['Map-Reduce Framework',        'Map output materialized bytes',         417723],
-          ['',                            'Map input records',                        338],
-          ['',                            'Reduce shuffle bytes',                       0],
-          ['',                            'Spilled Records',                          676],
-          ['',                            'Map output bytes',                      416365],
-          ['',                            'Total committed heap usage (bytes)', 581795840],
-          ['',                            'SPLIT_RAW_BYTES',                          238],
-          ['',                            'Combine input records',                      0],
-          ['',                            'Reduce input records',                     338],
-          ['',                            'Reduce input groups',                      338],
-          ['',                            'Combine output records',                     0],
-          ['',                            'Reduce output records',                      0],
-          ['',                            'Map output records',                       338]
-        ]
-      end
-
-      it 'outputs Ruby exceptions' do
-        hadoop_stderr.string = ruby_error_log
-        filter.run
-        shell.statuses.should include([:error, %{org.jruby.exceptions.RaiseException: (NoMethodError) undefined method `asdas' for #<DuplicatesFinder::JoinMultipleInputs:0x5d511019>}, :red])
-        shell.statuses.should include([:error, %{  at RUBY.reduce(/tmp/hadoop-theo/hadoop-unjar8455542447103659575/duplicates_finder.rb:34)}, :red])
-      end
-
-      it 'outputs Ruby warnings' do
-        hadoop_stderr.string = hadoop_error_log
-        filter.run
-        warning = shell.statuses.find { |_, msg, _| msg.include?('warning: already initialized constant ClassReader') }
-        warning.should_not be_nil
-        warning.first.should == :warning
-        warning.last.should == :yellow
-      end
-
-      it 'outputs Hadoop exceptions' do
-        hadoop_stderr.string = hadoop_error_log
-        filter.run
-        shell.statuses.should include([:error, 'java.lang.NullPointerException', :red])
-        shell.statuses.should include([:error, '  at org.apache.hadoop.mapred.MapTask$MapOutputBuffer.collect(MapTask.java:1018)', :red])
-        shell.statuses.should include([:error, '  at org.apache.hadoop.mapred.MapTask$NewOutputCollector.write(MapTask.java:691)', :red])
-        shell.statuses.should include([:error, '  at org.apache.hadoop.mapreduce.TaskInputOutputContext.write(TaskInputOutputContext.java:80)', :red])
-        shell.statuses.should include([:error, '  at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)', :red])
-      end
-
-      it 'does not report HADOOP_HOME warnings as errors' do
-        hadoop_stderr.string = counters_log
-        filter.run
-        shell.statuses.find { |_, msg, _| msg.include?('$HADOOP_HOME') }.should be_nil
-      end
-
-      it 'does not report spurious Hadoop output as errors' do
-        hadoop_stderr.string = counters_log
-        filter.run
-        error_statuses = shell.statuses.select { |status, _, _| status == :error }
-        error_statuses.find { |_, msg, _| msg.include?('Unable to load realm info from SCDynamicStore') }.should be_nil
-        error_statuses.find { |_, msg, _| msg.include?('Unable to load native-hadoop library') }.should be_nil
-        error_statuses.find { |_, msg, _| msg.include?('Snappy native library not loaded') }.should be_nil
       end
     end
   end
