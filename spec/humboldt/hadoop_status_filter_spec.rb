@@ -135,13 +135,6 @@ module Humboldt
         error_statuses.find { |_, msg, _| msg.include?('Unable to load native-hadoop library') }.should be_nil
         error_statuses.find { |_, msg, _| msg.include?('Snappy native library not loaded') }.should be_nil
       end
-
-      it 'discovers job failure' do
-        hadoop_stderr.string = hadoop_error_log
-        filter.run
-        shell.statuses.should_not include([:done, 'Job completed', nil])
-        shell.statuses.should include([:failed, 'Job failed', :red])
-      end
     end
   end
 end

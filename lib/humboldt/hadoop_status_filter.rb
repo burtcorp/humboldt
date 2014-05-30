@@ -6,7 +6,6 @@ module Humboldt
       @hadoop_stderr = hadoop_stderr
       @shell = shell
       @silent = silent
-      @job_failed = false
       @counters = {}
     end
 
@@ -36,7 +35,7 @@ module Humboldt
           when /Counters: \d+/
             @counters_printing = true
           when /WARN mapred\.LocalJobRunner: job_local_\d+/
-            @job_failed = true
+            # do nothing
           else
             unless hadoop_log?(line)
               @error_printing = true
@@ -51,12 +50,7 @@ module Humboldt
         end
         @shell.say(line.chomp, :red) unless @silent
       end
-      if @job_failed
-        @shell.say_status(:failed, 'Job failed', :red)
-      else
-        print_counters_table
-        @shell.say_status(:done, 'Job completed')
-      end
+      print_counters_table
     end
 
     private
