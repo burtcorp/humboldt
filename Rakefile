@@ -89,10 +89,7 @@ namespace :setup do
 
   task :test_project do
     Dir.chdir('spec/fixtures/test_project') do
-      command = (<<-END).lines.map(&:strip).join(' && ')
-      rvm gemset create humboldt-test_project
-      rvm $RUBY_VERSION@humboldt-test_project do gem install bundler
-      END
+      command = %Q{bash -l -c 'rvm use $RUBY_VERSION && rvm gemset create humboldt-test_project && rvm $RUBY_VERSION@humboldt-test_project do gem install bundler'}
       puts command
       Bundler.clean_system(command)
     end
