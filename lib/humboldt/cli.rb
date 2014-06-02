@@ -63,6 +63,8 @@ module Humboldt
     method_option :skip_prepare, :type => :boolean, :default => false, :desc => 'don\'t upload the JAR and bootstrap files, use only if you haven\'t changed anything since the last run'
     method_option :extra_hadoop_args, :type => :array, :default => [], :desc => 'extra arguments to pass on to hadoop'
     method_option :ec2_key_name, :type => :string, :desc => 'The name of an EC2 key pair to enable SSH access to master node'
+    method_option :aws_region, :type => :string, :default => 'eu-west-1', :desc => 'The AWS region where the EMR flow is to run'
+    method_option :hadoop_version, :type => :string, :default => '1.0.3', :desc => 'The EMR Hadoop version to use'
     def run_emr
       check_job!
       invoke(:package, [], {}) unless options.skip_package?
@@ -83,6 +85,7 @@ module Humboldt
         spot_instances: options[:spot_instances],
         extra_hadoop_args: options[:extra_hadoop_args],
         ec2_key_name: options[:ec2_key_name],
+        hadoop_version: options[:hadoop_version]
       )
       File.open('.humboldtjob', 'w') { |io| io.puts(job_flow.job_flow_id) }
       say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})
@@ -131,7 +134,7 @@ module Humboldt
     end
 
     def emr
-      @emr ||= AWS::EMR.new(region: 'eu-west-1')
+      @emr ||= AWS::EMR.new(region: options[:aws_region])
     end
 
     def job_bucket

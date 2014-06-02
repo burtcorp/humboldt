@@ -42,7 +42,6 @@ module Humboldt
 
     private
 
-    HADOOP_VERSION = '1.0.3'.freeze
     BOOTSTRAP_TASK_FILES = {
       :remove_old_jruby => 'config/emr-bootstrap/remove_old_jruby.sh'
     }.freeze
@@ -95,7 +94,7 @@ module Humboldt
     def instance_configuration(launch_options)
       {
         :ec2_key_name => launch_options[:ec2_key_name],
-        :hadoop_version => HADOOP_VERSION,
+        :hadoop_version => launch_options[:hadoop_version],
         :instance_groups => InstanceGroupConfiguration.create(launch_options)
       }
     end
