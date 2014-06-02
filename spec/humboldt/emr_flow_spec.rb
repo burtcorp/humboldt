@@ -170,11 +170,16 @@ module Humboldt
           @configuration[:instances][:ec2_key_name].should == 'my-keypair'
         end
 
+        it 'uses the supplied hadoop version' do
+          flow.run!(hadoop_version: '4.5.6')
+          @configuration[:instances][:hadoop_version].should == '4.5.6'
+        end
+
         it 'configures the instances' do
           flow.run!
           @configuration[:instances].should == {
             :ec2_key_name => nil,
-            :hadoop_version => '1.0.3',
+            :hadoop_version => nil,
             :instance_groups => [
               {
                 :name => 'Master Group',

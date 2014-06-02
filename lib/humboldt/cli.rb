@@ -13,6 +13,24 @@ module Humboldt
   class Cli < Thor
     include Thor::Actions
 
+    DEFAULTS = {
+      data_path: 'data/completes',
+      silent: true,
+      skip_package: false,
+      extra_hadoop_args: [],
+      cleanup_before: false,
+      data_bucket: 'completes-logs',
+      job_bucket: 'humboldt-emr',
+      instance_count: 4,
+      instance_type: 'c1.xlarge',
+      spot_instances: nil,
+      bid_price: 0.2,
+      poll: false,
+      skip_prepare: false,
+      aws_region: 'eu-west-1',
+      hadoop_version: '1.0.3'
+    }
+
     desc 'package', 'Package job JAR file'
     def package
       say_status(:package, relative_path(job_package.jar_path))
@@ -24,11 +42,11 @@ module Humboldt
     method_option :output, :type => :string, :desc => 'the output directory, defaults to "data/<job_config>/output"'
     method_option :job_config, :type => 'string', :desc => 'the name of the Ruby file containing the job configuration, defaults to the project name (e.g. "lib/<job_config>.rb")'
     method_option :hadoop_config, :type => 'string', :desc => 'the path to a Hadoop configuration XML file, defaults to Humboldt-provided config that runs Hadoop in local-mode'
-    method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
-    method_option :data_path, :type => :string, :default => 'data/completes', :desc => 'input paths will be resolved against this path'
-    method_option :silent, :type => :boolean, :default => true, :desc => 'silence the hadoop command\'s logging'
-    method_option :skip_package, :type => :boolean, :default => false, :desc => 'don\'t package the JAR, use only if you haven\'t changed anything since the last run'
-    method_option :extra_hadoop_args, :type => :array, :default => [], :desc => 'extra arguments to on pass to hadoop'
+    method_option :cleanup_before, :type => :boolean, :desc => "automatically remove the output dir before launching (default: #{DEFAULTS[:cleanup_before]})"
+    method_option :data_path, :type => :string, :desc => "input paths will be resolved against this path (default: #{DEFAULTS[:data_path]})"
+    method_option :silent, :type => :boolean, :desc => "silence the hadoop command's logging (default: #{DEFAULTS[:silent]})"
+    method_option :skip_package, :type => :boolean, :desc => "don't package the JAR, use only if you haven't changed anything since the last run (default: #{DEFAULTS[:skip_package]})"
+    method_option :extra_hadoop_args, :type => :array, :desc => "extra arguments to on pass to hadoop (default: #{DEFAULTS[:extra_hadoop_args]})"
     def run_local
       check_job!
       invoke(:package, [], {}) unless options.skip_package?
@@ -51,20 +69,20 @@ module Humboldt
     method_option :input, :type => :string, :required => true, :desc => 'input glob, will be resolved against the data bucket'
     method_option :output, :type => :string, :desc => 'the output directory, defaults to "<project_name>/<job_config>/output" in the job bucket'
     method_option :job_config, :type => 'string', :desc => 'the name of the Ruby file containing the job configuration, defaults to the project name (e.g. "lib/<job_config>.rb")'
-    method_option :cleanup_before, :type => :boolean, :default => false, :desc => 'automatically remove the output dir before launching'
-    method_option :data_bucket, :type => :string, :default => 'completes-logs', :desc => 'S3 bucket containing input data'
-    method_option :job_bucket, :type => :string, :default => 'humboldt-emr', :desc => 'S3 bucket to upload JAR, output logs and results into'
-    method_option :instance_count, :type => :numeric, :default => 4, :desc => 'the number of worker instances to launch'
-    method_option :instance_type, :type => :string, :default => 'c1.xlarge', :desc => 'the worker instance type, see http://ec2pricing.iconara.info/ for available types'
+    method_option :cleanup_before, :type => :boolean, :desc => "automatically remove the output dir before launching (default: #{DEFAULTS[:cleanup_before]})"
+    method_option :data_bucket, :type => :string, :desc => "S3 bucket containing input data (default: #{DEFAULTS[:data_bucket]})"
+    method_option :job_bucket, :type => :string, :desc => "S3 bucket to upload JAR, output logs and results into (default: #{DEFAULTS[:job_bucket]})"
+    method_option :instance_count, :type => :numeric, :desc => "the number of worker instances to launch (default: #{DEFAULTS[:instance_count]})"
+    method_option :instance_type, :type => :string, :desc => "the worker instance type, see http://ec2pricing.iconara.info/ for available types (default: #{DEFAULTS[:instance_type]})"
     method_option :spot_instances, :type => :array, :lazy_default => [], :desc => 'use spot instances; either an explicit list of instance groups or no value to run all groups as spot instances'
-    method_option :bid_price, :type => :string, :default => '0.2', :desc => 'how much to bid for spot instances, see http://ec2pricing.iconara.info/ for current spot prices'
-    method_option :poll, :type => :boolean, :default => false, :desc => 'poll the job\'s status every 10s and display'
-    method_option :skip_package, :type => :boolean, :default => false, :desc => 'don\'t package the JAR, use only if you haven\'t changed anything since the last run'
-    method_option :skip_prepare, :type => :boolean, :default => false, :desc => 'don\'t upload the JAR and bootstrap files, use only if you haven\'t changed anything since the last run'
-    method_option :extra_hadoop_args, :type => :array, :default => [], :desc => 'extra arguments to pass on to hadoop'
+    method_option :bid_price, :type => :string, :desc => "how much to bid for spot instances, see http://ec2pricing.iconara.info/ for current spot prices (default: #{DEFAULTS[:bid_price]})"
+    method_option :poll, :type => :boolean, :desc => "poll the job's status every 10s and display (default: #{DEFAULTS[:poll]})"
+    method_option :skip_package, :type => :boolean, :desc => "don't package the JAR, use only if you haven't changed anything since the last run (default: #{DEFAULTS[:skip_package]})"
+    method_option :skip_prepare, :type => :boolean, :desc => "don't upload the JAR and bootstrap files, use only if you haven't changed anything since the last run (default: #{DEFAULTS[:skip_prepare]})"
+    method_option :extra_hadoop_args, :type => :array, :desc => "extra arguments to pass on to hadoop (default: #{DEFAULTS[:extra_hadoop_args]})"
     method_option :ec2_key_name, :type => :string, :desc => 'The name of an EC2 key pair to enable SSH access to master node'
-    method_option :aws_region, :type => :string, :default => 'eu-west-1', :desc => 'The AWS region where the EMR flow is to run'
-    method_option :hadoop_version, :type => :string, :default => '1.0.3', :desc => 'The EMR Hadoop version to use'
+    method_option :aws_region, :type => :string, :desc => "The AWS region where the EMR flow is to run (default: #{DEFAULTS[:aws_region]})"
+    method_option :hadoop_version, :type => :string, :desc => "The EMR Hadoop version to use (default: #{DEFAULTS[:hadoop_version]})"
     def run_emr
       check_job!
       invoke(:package, [], {}) unless options.skip_package?
@@ -106,6 +124,27 @@ module Humboldt
     def emr_jobs
       emr.job_flows.each do |job_flow|
         print_job_flow_status(job_flow)
+      end
+    end
+
+    desc 'configure', 'Configure humboldt for the current project'
+    def configure
+      say("Please ensure you are located at the root directory of the project you are configuring.", :yellow)
+      configuration = options_from_config_file
+      configuration[:ec2_key_name] = ask("EC2 key pair name to enable SSH access to EMR master node: [#{config_file_options_with_defaults[:ec2_key_name]}]")
+      configuration[:aws_region] = ask("AWS region: [#{config_file_options_with_defaults[:aws_region]}]")
+      configuration[:hadoop_version] = ask("Hadoop version: [#{config_file_options_with_defaults[:hadoop_version]}]")
+      configuration.each do |key, value|
+        value = configuration[key] = config_file_options_with_defaults[key] if value.empty?
+        configuration.delete(key) if value.empty? || value == DEFAULTS[key]
+      end
+      File.open('.humboldt.yml', 'w') { |f| YAML.dump(configuration, f) }
+      say('Updated .humboldt.yml', :green)
+    end
+
+    no_commands do
+      def options
+        @extended_options ||= Thor::CoreExt::HashWithIndifferentAccess.new(config_file_options_with_defaults.merge(super))
       end
     end
 
@@ -206,6 +245,18 @@ module Humboldt
       say_status(:error, e.message, :red)
       sleep 1
       retry
+    end
+
+    def config_file_options_with_defaults
+      @config_file_options_with_defaults ||= DEFAULTS.merge(options_from_config_file)
+    end
+
+    def options_from_config_file
+      @options_from_config_file ||= begin
+        ::YAML::load_file(".humboldt.yml")
+      rescue Errno::ENOENT
+        {}
+      end
     end
   end
 end
