@@ -62,6 +62,7 @@ module Humboldt
     method_option :skip_package, :type => :boolean, :default => false, :desc => 'don\'t package the JAR, use only if you haven\'t changed anything since the last run'
     method_option :skip_prepare, :type => :boolean, :default => false, :desc => 'don\'t upload the JAR and bootstrap files, use only if you haven\'t changed anything since the last run'
     method_option :extra_hadoop_args, :type => :array, :default => [], :desc => 'extra arguments to pass on to hadoop'
+    method_option :ec2_key_name, :type => :string, :desc => 'The name of an EC2 key pair to enable SSH access to master node'
     def run_emr
       check_job!
       invoke(:package, [], {}) unless options.skip_package?
@@ -74,12 +75,14 @@ module Humboldt
         say_status(:upload, flow.jar_uri)
         flow.prepare!
       end
+      say_status(:warning, "No EC2 key name configured. You will not be able to access the master node via SSH.", :yellow) unless options[:ec2_key_name]
       job_flow = flow.run!(
         bid_price: options[:bid_price],
         instance_count: options[:instance_count],
         instance_type: options[:instance_type],
         spot_instances: options[:spot_instances],
         extra_hadoop_args: options[:extra_hadoop_args],
+        ec2_key_name: options[:ec2_key_name],
       )
       File.open('.humboldtjob', 'w') { |io| io.puts(job_flow.job_flow_id) }
       say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})

@@ -42,7 +42,6 @@ module Humboldt
 
     private
 
-    EC2_KEY_NAME = 'burt-id_rsa-gsg-keypair'.freeze
     HADOOP_VERSION = '1.0.3'.freeze
     BOOTSTRAP_TASK_FILES = {
       :remove_old_jruby => 'config/emr-bootstrap/remove_old_jruby.sh'
@@ -95,7 +94,7 @@ module Humboldt
 
     def instance_configuration(launch_options)
       {
-        :ec2_key_name => EC2_KEY_NAME,
+        :ec2_key_name => launch_options[:ec2_key_name],
         :hadoop_version => HADOOP_VERSION,
         :instance_groups => InstanceGroupConfiguration.create(launch_options)
       }

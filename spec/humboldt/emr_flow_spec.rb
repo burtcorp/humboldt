@@ -165,10 +165,15 @@ module Humboldt
           end
         end
 
+        it 'configures the keypair' do
+          flow.run!(ec2_key_name: 'my-keypair')
+          @configuration[:instances][:ec2_key_name].should == 'my-keypair'
+        end
+
         it 'configures the instances' do
           flow.run!
           @configuration[:instances].should == {
-            :ec2_key_name => 'burt-id_rsa-gsg-keypair',
+            :ec2_key_name => nil,
             :hadoop_version => '1.0.3',
             :instance_groups => [
               {
