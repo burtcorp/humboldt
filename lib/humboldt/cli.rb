@@ -19,8 +19,6 @@ module Humboldt
       skip_package: false,
       extra_hadoop_args: [],
       cleanup_before: false,
-      data_bucket: 'completes-logs',
-      job_bucket: 'humboldt-emr',
       instance_count: 4,
       instance_type: 'c1.xlarge',
       spot_instances: nil,
@@ -131,9 +129,12 @@ module Humboldt
     def configure
       say("Please ensure you are located at the root directory of the project you are configuring.", :yellow)
       configuration = options_from_config_file
+      say('EMR configuration', :green)
       configuration[:ec2_key_name] = ask("EC2 key pair name to enable SSH access to EMR master node: [#{config_file_options_with_defaults[:ec2_key_name]}]")
       configuration[:aws_region] = ask("AWS region: [#{config_file_options_with_defaults[:aws_region]}]")
       configuration[:hadoop_version] = ask("Hadoop version: [#{config_file_options_with_defaults[:hadoop_version]}]")
+      configuration[:data_bucket] = ask("Input data S3 bucket: [#{config_file_options_with_defaults[:data_bucket]}]")
+      configuration[:job_bucket] = ask("Job S3 bucket (where JAR is uploaded, output logs and job output go to): [#{config_file_options_with_defaults[:job_bucket]}]")
       configuration.each do |key, value|
         value = configuration[key] = config_file_options_with_defaults[key] if value.empty?
         configuration.delete(key) if value.empty? || value == DEFAULTS[key]
