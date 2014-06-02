@@ -5,9 +5,8 @@ module Humboldt
     attr_reader :output_path
 
     def initialize(*args)
-      @job_name, @input_glob, @package, @emr, @data_bucket, @job_bucket, @output_path, @extra_job_args = args
+      @job_name, @input_glob, @package, @emr, @data_bucket, @job_bucket, @output_path = args
       @output_path ||= "#{@package.project_name}/#{@job_name}/output"
-      @extra_job_args ||= []
     end
 
     def prepare!
@@ -88,7 +87,7 @@ module Humboldt
       {
         :log_uri => s3_uri(log_path),
         :instances => instance_configuration(launch_options),
-        :steps => [step_configuration],
+        :steps => [step_configuration(launch_options)],
         :bootstrap_actions => bootstrap_actions,
         :visible_to_all_users => true
       }
@@ -126,7 +125,7 @@ module Humboldt
       [remove_old_jruby_action, configure_hadoop_action]
     end
 
-    def step_configuration
+    def step_configuration(launch_options)
       {
         :name => @package.project_name,
         :hadoop_jar_step => {
@@ -135,7 +134,7 @@ module Humboldt
             @job_name,
             s3_uri(@input_glob, protocol: 's3n', bucket: @data_bucket),
             s3_uri(output_path, protocol: 's3n'),
-            *@extra_job_args
+            *launch_options[:extra_hadoop_args]
           ]
         }
       }

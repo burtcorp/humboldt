@@ -65,7 +65,7 @@ module Humboldt
     def run_emr
       check_job!
       invoke(:package, [], {}) unless options.skip_package?
-      flow = EmrFlow.new(job_config, options[:input], job_package, emr, data_bucket, job_bucket, options[:output], options[:extra_hadoop_args])
+      flow = EmrFlow.new(job_config, options[:input], job_package, emr, data_bucket, job_bucket, options[:output])
       if options.cleanup_before?
         say_status(:remove, flow.output_uri)
         flow.cleanup!
@@ -78,7 +78,8 @@ module Humboldt
         bid_price: options[:bid_price],
         instance_count: options[:instance_count],
         instance_type: options[:instance_type],
-        spot_instances: options[:spot_instances]
+        spot_instances: options[:spot_instances],
+        extra_hadoop_args: options[:extra_hadoop_args],
       )
       File.open('.humboldtjob', 'w') { |io| io.puts(job_flow.job_flow_id) }
       say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})

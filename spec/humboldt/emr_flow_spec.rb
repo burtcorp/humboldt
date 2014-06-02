@@ -156,11 +156,11 @@ module Humboldt
 
         describe 'with extra job arguments' do
           let :flow do
-            described_class.new('some_job', 'input_glob/*/*', package, emr, data_bucket, job_bucket, 'my_awesome_job/some_job/output', ['foo', 'bar'])
+            described_class.new('some_job', 'input_glob/*/*', package, emr, data_bucket, job_bucket, 'my_awesome_job/some_job/output')
           end
 
           it 'configures the job flow steps to include the extra arguments' do
-            flow.run!
+            flow.run!(extra_hadoop_args: ['foo', 'bar'])
             @configuration[:steps][0][:hadoop_jar_step][:args][3..4].should == ['foo', 'bar']
           end
         end
