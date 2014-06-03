@@ -1,6 +1,6 @@
 language: ruby
 rvm:
-  - jruby-19mode
+  - jruby
 env:
   - HADOOP_RELEASE=hadoop-1.0.3/hadoop-1.0.3-bin
   - HADOOP_RELEASE=hadoop-2.2.0/hadoop-2.2.0
