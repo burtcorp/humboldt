@@ -10,19 +10,15 @@ Gem::Specification.new do |s|
   s.version     = Humboldt::VERSION.dup
   s.license     = 'BSD-3-Clause'
   s.platform    = 'java'
-  s.authors     = ['Theo Hultberg']
+  s.authors     = ['The Burt Platform Team']
   s.email       = ['theo@burtcorp.com']
   s.homepage    = 'http://github.com/burtcorp/humboldt'
-  s.summary     = %q{}
-  s.description = %q{}
+  s.summary     = %q{Tools and libraries for simplifying running Rubydoop jobs locally and on AWS Elastic MapReduce}
+  s.description = %q{Humboldt provides a mapreduce API abstraction built on top of Rubydoop, and tools to run Hadoop jobs effortlessly both locally and on Amazon EMR}
 
-  s.rubyforge_project = 'humboldt'
-
-  s.add_dependency 'rubydoop', '~> 1.1.2'
-  s.add_dependency 'json'
   s.add_dependency 'thor'
+  s.add_dependency 'rubydoop', '~> 1.1.2'
   s.add_dependency 'aws-sdk', '>= 1.16.0', '< 1.33.0'
-  s.add_dependency 'jruby-openssl'
 
   s.files         = Dir['lib/**/*.{rb,jar}'] + Dir['bin/*'] + Dir['config/**/*']
   s.executables  = %w[humboldt]
