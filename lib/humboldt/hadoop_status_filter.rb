@@ -6,21 +6,20 @@ module Humboldt
       @hadoop_stderr = hadoop_stderr
       @shell = shell
       @silent = silent
-      @job_failed = false
       @counters = {}
     end
 
     def run
       counter_group = nil
       while line = @hadoop_stderr.gets
-        if @counters_printing && hadoop_log?(line)
-          case line.chomp.strip
-          when /JobClient:     (.+)=(\d+)$/
+        if @counters_printing && (hadoop_log?(line) || line =~ /^\t+/)
+          case line.chomp
+          when /(?:JobClient:     |\t+)([^\t]+)=(\d+)$/
             if counter_group
               @counters[counter_group] ||= {}
               @counters[counter_group][$1.strip] = $2.to_i
             end
-          when /JobClient:   (.+)$/
+          when /(?:JobClient:   |\t+)([^\t]+)$/
             counter_group = $1.strip
           end
         elsif @error_printing && !hadoop_log?(line) && !ignore?(line)
@@ -35,12 +34,10 @@ module Humboldt
             report_progress($1, $2)
           when /Counters: \d+/
             @counters_printing = true
-          when /WARN mapred\.LocalJobRunner: job_local_\d+/
-            @job_failed = true
           else
             unless hadoop_log?(line)
               @error_printing = true
-              if line.include?('warning:')
+              if line =~ /warning(!|:)/i
                 @error_type = :warning
               else
                 @error_type = :error
@@ -51,18 +48,13 @@ module Humboldt
         end
         @shell.say(line.chomp, :red) unless @silent
       end
-      if @job_failed
-        @shell.say_status(:failed, 'Job failed', :red)
-      else
-        print_counters_table
-        @shell.say_status(:done, 'Job completed')
-      end
+      print_counters_table
     end
 
     private
 
     def hadoop_log?(line)
-      line =~ /(?:INFO|WARN) (?:mapred|input|output)\./
+      line =~ /(?:INFO|WARN) (?:mapred|input|output|util|jvm|mapreduce)\./
     end
 
     def ignore?(line)
@@ -71,7 +63,9 @@ module Humboldt
            /Warning: \$HADOOP_HOME is deprecated/, 
            /Unable to load realm info from SCDynamicStore/,
            /Unable to load native-hadoop library/,
-           /Snappy native library not loaded/
+           /Snappy native library not loaded/,
+           /Configuration.deprecation:/,
+           /WARN conf.Configuration.*attempt to override final parameter.*ignoring/i
         true
       else
         false

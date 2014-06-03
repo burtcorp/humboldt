@@ -154,7 +154,7 @@ module Humboldt
 
     def run_command(*args)
       say_status(:running, 'Hadoop started')
-      Open3.popen3(*args) do |stdin, stdout, stderr|
+      Open3.popen3(*args) do |stdin, stdout, stderr, wait_thr|
         stdin.close
         stdout_printer = Thread.new(stdout) do |stdout|
           while line = stdout.gets
@@ -167,6 +167,11 @@ module Humboldt
         end
         stdout_printer.join
         stderr_printer.join
+        if wait_thr.value.exitstatus == 0
+          say_status(:done, 'Job completed')
+        else
+          say_status(:failed, 'Job failed', :red)
+        end
       end
     end
 
