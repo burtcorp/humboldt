@@ -69,3 +69,7 @@ Run the tests with
 ## Release a new gem
 
 Bump the version number in `lib/humboldt/version.rb`, run `rake gem:release`.
+
+# Copyright
+
+© 2014 Burt AB, see LICENSE.txt (BSD 3-Clause).

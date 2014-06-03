@@ -8,6 +8,7 @@ require 'humboldt/version'
 Gem::Specification.new do |s|
   s.name        = 'humboldt'
   s.version     = Humboldt::VERSION.dup
+  s.license     = 'BSD-3-Clause'
   s.platform    = 'java'
   s.authors     = ['Theo Hultberg']
   s.email       = ['theo@burtcorp.com']
