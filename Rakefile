@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+require 'bundler'
 require 'bundler/setup'
 require 'ant'
 
@@ -41,30 +42,13 @@ desc 'Build the lib/humboldt.jar'
 task :build => 'build:jars'
 
 namespace :gem do
-  PROJECT_NAME = Dir['*.gemspec'].first.split('.').first
-
-  task :tag do
-    spec = eval(File.read("#{PROJECT_NAME}.gemspec"))
-    version_string = "v#{spec.version.to_s}"
-    unless %x(git tag -l).split("\n").include?(version_string)
-      system %(git tag -a #{version_string} -m #{version_string})
-    end
-    system %(git push && git push --tags)
-  end
-
-  task :build do
-    mkdir_p 'pkg'
-    system %(gem build #{PROJECT_NAME}.gemspec && mv #{PROJECT_NAME}-*.gem pkg)
-  end
-
-  task :inabox => :build do
-    system %(gem inabox pkg/#{PROJECT_NAME}-*.gem)
-  end
-
-  desc "Tag and release a new gem inabox"
-  task :release => [:tag, :inabox]
+  Bundler::GemHelper.install_tasks
 end
+
 task 'gem:build' => 'build:jars'
+
+desc 'Release a new gem version'
+task :release => [:spec, 'gem:release']
 
 namespace :setup do
   hadoop_release = ENV['HADOOP_RELEASE'] || 'hadoop-1.0.3/hadoop-1.0.3-bin'
