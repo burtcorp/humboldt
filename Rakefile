@@ -3,6 +3,7 @@
 require 'bundler'
 require 'bundler/setup'
 require 'ant'
+require 'rspec/core/rake_task'
 
 namespace :build do
   source_dir = 'ext/src'
@@ -38,7 +39,7 @@ namespace :build do
   end
 end
 
-desc 'Build the lib/humboldt.jar'
+desc 'Build native extensions'
 task :build => 'build:jars'
 
 namespace :gem do
@@ -90,15 +91,13 @@ namespace :setup do
   end
 end
 
-desc 'Download Hadoop and set up classpath'
+desc 'Download Hadoop and set up the classpath configuration'
 task :setup => ['setup:hadoop', 'setup:test_project', 'setup:classpath']
-
-require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new(:spec) do |r|
   r.rspec_opts = '--tty'
   r.pattern = 'spec/{integration,humboldt}/**/*_spec.rb'
 end
 
-desc "Run the specs"
-task :spec => 'gem:build'
+desc 'Build extensions and run the specs'
+task :spec => 'build'
