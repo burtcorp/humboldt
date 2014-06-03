@@ -5,9 +5,8 @@ module Humboldt
     attr_reader :output_path
 
     def initialize(*args)
-      @job_name, @input_glob, @package, @emr, @data_bucket, @job_bucket, @output_path, @extra_job_args = args
+      @job_name, @input_glob, @package, @emr, @data_bucket, @job_bucket, @output_path = args
       @output_path ||= "#{@package.project_name}/#{@job_name}/output"
-      @extra_job_args ||= []
     end
 
     def prepare!
@@ -43,8 +42,6 @@ module Humboldt
 
     private
 
-    EC2_KEY_NAME = 'burt-id_rsa-gsg-keypair'.freeze
-    HADOOP_VERSION = '1.0.3'.freeze
     BOOTSTRAP_TASK_FILES = {
       :remove_old_jruby => 'config/emr-bootstrap/remove_old_jruby.sh'
     }.freeze
@@ -88,7 +85,7 @@ module Humboldt
       {
         :log_uri => s3_uri(log_path),
         :instances => instance_configuration(launch_options),
-        :steps => [step_configuration],
+        :steps => [step_configuration(launch_options)],
         :bootstrap_actions => bootstrap_actions,
         :visible_to_all_users => true
       }
@@ -96,8 +93,8 @@ module Humboldt
 
     def instance_configuration(launch_options)
       {
-        :ec2_key_name => EC2_KEY_NAME,
-        :hadoop_version => HADOOP_VERSION,
+        :ec2_key_name => launch_options[:ec2_key_name],
+        :hadoop_version => launch_options[:hadoop_version],
         :instance_groups => InstanceGroupConfiguration.create(launch_options)
       }
     end
@@ -126,7 +123,7 @@ module Humboldt
       [remove_old_jruby_action, configure_hadoop_action]
     end
 
-    def step_configuration
+    def step_configuration(launch_options)
       {
         :name => @package.project_name,
         :hadoop_jar_step => {
@@ -135,7 +132,7 @@ module Humboldt
             @job_name,
             s3_uri(@input_glob, protocol: 's3n', bucket: @data_bucket),
             s3_uri(output_path, protocol: 's3n'),
-            *@extra_job_args
+            *launch_options[:extra_hadoop_args]
           ]
         }
       }

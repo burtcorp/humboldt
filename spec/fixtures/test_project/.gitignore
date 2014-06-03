@@ -2,6 +2,7 @@
 /ext/build
 /ext/dist
 /data/test_project
+/data/another_job_config
 /data/log
 /important.doc
 /another_file

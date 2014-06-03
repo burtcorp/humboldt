@@ -156,20 +156,30 @@ module Humboldt
 
         describe 'with extra job arguments' do
           let :flow do
-            described_class.new('some_job', 'input_glob/*/*', package, emr, data_bucket, job_bucket, 'my_awesome_job/some_job/output', ['foo', 'bar'])
+            described_class.new('some_job', 'input_glob/*/*', package, emr, data_bucket, job_bucket, 'my_awesome_job/some_job/output')
           end
 
           it 'configures the job flow steps to include the extra arguments' do
-            flow.run!
+            flow.run!(extra_hadoop_args: ['foo', 'bar'])
             @configuration[:steps][0][:hadoop_jar_step][:args][3..4].should == ['foo', 'bar']
           end
+        end
+
+        it 'configures the keypair' do
+          flow.run!(ec2_key_name: 'my-keypair')
+          @configuration[:instances][:ec2_key_name].should == 'my-keypair'
+        end
+
+        it 'uses the supplied hadoop version' do
+          flow.run!(hadoop_version: '4.5.6')
+          @configuration[:instances][:hadoop_version].should == '4.5.6'
         end
 
         it 'configures the instances' do
           flow.run!
           @configuration[:instances].should == {
-            :ec2_key_name => 'burt-id_rsa-gsg-keypair',
-            :hadoop_version => '1.0.3',
+            :ec2_key_name => nil,
+            :hadoop_version => nil,
             :instance_groups => [
               {
                 :name => 'Master Group',

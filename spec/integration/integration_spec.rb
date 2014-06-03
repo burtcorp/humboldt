@@ -2,6 +2,7 @@
 
 require 'rake'
 require 'spec_helper'
+require 'yaml'
 
 describe 'Packaging and running a project' do
   def isolated_run(dir, cmd)
@@ -15,8 +16,10 @@ describe 'Packaging and running a project' do
   end
 
   before :all do
+    FileUtils.rm_rf File.join(test_project_dir, '.humboldt.yml')
     FileUtils.rm_rf File.join(test_project_dir, 'build')
     FileUtils.rm_rf File.join(test_project_dir, 'data/test_project/output')
+    FileUtils.rm_rf File.join(test_project_dir, 'data/another_job_config/output')
     FileUtils.rm_rf File.join(test_project_dir, 'data/log')
     FileUtils.rm_rf File.join(test_project_dir, 'important.doc')
     FileUtils.rm_rf File.join(test_project_dir, 'another_file')
@@ -50,10 +53,11 @@ describe 'Packaging and running a project' do
       jar_entries.should include("test_project.rb")
       jar_entries.should include("distributed_cache_test.rb")
       jar_entries.should include("combined_text_test.rb")
+      jar_entries.should include("another_job_config.rb")
     end
   end
 
-  context 'Running the project' do
+  context 'Running the project jobs' do
     before :all do
       isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --skip-package --data-path=data --input='input' 2>&1 | tee data/log")
     end
@@ -84,6 +88,27 @@ describe 'Packaging and running a project' do
       it 'outputs the expected result' do
         File.readlines('data/test_project/output/combined_text/part-r-00000').last.should == "key\t1 2\n"
       end
+    end
+  end
+
+  context 'Running with a project configuration' do
+    CONFIG = {
+      job_config: 'another_job_config'
+    }
+
+    before :all do
+      File.open(File.join(test_project_dir, '.humboldt.yml'), 'w') do |f|
+        YAML.dump(CONFIG, f)
+      end
+      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --skip-package --data-path=data --input='input/combined_text' 2>&1 | tee data/log")
+    end
+
+    after :all do
+      FileUtils.rm_rf File.join(test_project_dir, '.humboldt.yml')
+    end
+
+    it 'uses the job config directive from the configuration file' do
+      expect(File.directory?('data/another_job_config/output')).to be_true
     end
   end
 end
