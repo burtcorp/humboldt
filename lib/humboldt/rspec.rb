@@ -93,6 +93,16 @@ module RunnerHelpers
       end
     end
   end
+
+  class FakeCounter
+    def initialize(&block)
+      @block = block
+    end
+
+    def increment(*args)
+      @block.call(*args)
+    end
+  end
 end
 
 RSpec.configure do |conf|
