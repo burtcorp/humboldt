@@ -100,4 +100,4 @@ RSpec::Core::RakeTask.new(:spec) do |r|
 end
 
 desc 'Build extensions and run the specs'
-task :spec => 'build'
+task :spec => 'gem:build'
