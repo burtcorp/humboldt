@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    humboldt (1.0.2-java)
+    humboldt (1.0.3-java)
       aws-sdk (>= 1.16.0, < 1.33.0)
       rubydoop (~> 1.1.2)
       thor
