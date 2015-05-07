@@ -40,13 +40,11 @@ module Humboldt
           unless value.is_a?(Hash) || value.is_a?(Array)
             raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected Hash or Array"
           end
-          packed = MessagePack.pack(value)
-          @hadoop.set(packed.to_java_bytes, 0, packed.bytesize)
+          super(MessagePack.pack(value))
         end
 
         def ruby
-          packed = String.from_java_bytes(@hadoop.bytes).byteslice(0, @hadoop.length)
-          MessagePack.unpack(packed, encoding: Encoding::UTF_8)
+          MessagePack.unpack(super(), encoding: Encoding::UTF_8)
         end
       end
     rescue LoadError
@@ -94,11 +92,11 @@ module Humboldt
           unless value.is_a?(Hash) || value.is_a?(Array)
             raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected Hash or Array"
           end
-          @hadoop.set(JSON.generate(value))
+          super(JSON.generate(value))
         end
 
         def ruby
-          JSON.parse(hadoop.to_s)
+          JSON.parse(super())
         end
       end
     end
