@@ -14,3 +14,5 @@ require 'humboldt/processor'
 require 'humboldt/mapper'
 require 'humboldt/reducer'
 require 'humboldt/prefix_grouping'
+
+require 'humboldt.jar'
