@@ -15,4 +15,5 @@ require 'humboldt/mapper'
 require 'humboldt/reducer'
 require 'humboldt/prefix_grouping'
 
-require 'humboldt.jar'
+$CLASSPATH << File.expand_path('../humboldt.jar', __FILE__)
+Java::Humboldt::HumboldtLibrary.new.load(JRuby.runtime, false)
