@@ -5,31 +5,6 @@ module Humboldt
     class Binary
       HADOOP = ::Hadoop::Io::BytesWritable
       RUBY = ::String
-
-      attr_reader :hadoop
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-        @hadoop = value
-      end
-
-      def initialize
-        @hadoop = HADOOP.new
-      end
-
-      def ruby
-        String.from_java_bytes(@hadoop.bytes).byteslice(0, @hadoop.length)
-      end
-
-      def ruby=(value)
-        unless value.is_a?(RUBY)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-
-        @hadoop.set(value.to_java_bytes, 0, value.bytesize)
-      end
     end
 
     begin
@@ -53,35 +28,6 @@ module Humboldt
     class Text
       HADOOP = ::Hadoop::Io::Text
       RUBY = ::String
-
-      attr_reader :hadoop
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-        @hadoop = value
-      end
-
-      def initialize
-        @hadoop = HADOOP.new
-      end
-
-      def ruby
-        String.from_java_bytes(@hadoop.bytes).byteslice(0, @hadoop.length).force_encoding(Encoding::UTF_8)
-      end
-
-      def ruby=(value)
-        unless value.is_a?(RUBY)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-
-        if value.encoding == Encoding::UTF_8
-          @hadoop.set(value.to_java_bytes, 0, value.bytesize)
-        else
-          @hadoop.set(value)
-        end
-      end
     end
 
     begin
@@ -104,56 +50,11 @@ module Humboldt
     class Long
       HADOOP = ::Hadoop::Io::LongWritable
       RUBY = ::Integer
-
-      attr_reader :hadoop
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-        @hadoop = value
-      end
-
-      def initialize
-        @hadoop = HADOOP.new
-      end
-
-      def ruby
-        @hadoop.get
-      end
-
-      def ruby=(value)
-        unless value.is_a?(Integer)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-
-        @hadoop.set value
-      end
     end
 
     class None
       HADOOP = ::Hadoop::Io::NullWritable
       RUBY = ::NilClass
-
-      def hadoop
-        HADOOP.get
-      end
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-      end
-
-      def ruby
-        nil
-      end
-
-      def ruby=(value)
-        unless value.nil?
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-      end
     end
 
     TYPE_CONVERTER_CLASS_CACHE = Hash.new { |h,k| h[k] = const_get(k.to_s.capitalize) }
