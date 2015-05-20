@@ -5,31 +5,6 @@ module Humboldt
     class Binary
       HADOOP = ::Hadoop::Io::BytesWritable
       RUBY = ::String
-
-      attr_reader :hadoop
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-        @hadoop = value
-      end
-
-      def initialize
-        @hadoop = HADOOP.new
-      end
-
-      def ruby
-        String.from_java_bytes(@hadoop.bytes).byteslice(0, @hadoop.length)
-      end
-
-      def ruby=(value)
-        unless value.is_a?(RUBY)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-
-        @hadoop.set(value.to_java_bytes, 0, value.bytesize)
-      end
     end
 
     begin
@@ -40,13 +15,11 @@ module Humboldt
           unless value.is_a?(Hash) || value.is_a?(Array)
             raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected Hash or Array"
           end
-          packed = MessagePack.pack(value)
-          @hadoop.set(packed.to_java_bytes, 0, packed.bytesize)
+          super(MessagePack.pack(value))
         end
 
         def ruby
-          packed = String.from_java_bytes(@hadoop.bytes).byteslice(0, @hadoop.length)
-          MessagePack.unpack(packed, encoding: Encoding::UTF_8)
+          MessagePack.unpack(super(), encoding: Encoding::UTF_8)
         end
       end
     rescue LoadError
@@ -55,35 +28,6 @@ module Humboldt
     class Text
       HADOOP = ::Hadoop::Io::Text
       RUBY = ::String
-
-      attr_reader :hadoop
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-        @hadoop = value
-      end
-
-      def initialize
-        @hadoop = HADOOP.new
-      end
-
-      def ruby
-        String.from_java_bytes(@hadoop.bytes).byteslice(0, @hadoop.length).force_encoding(Encoding::UTF_8)
-      end
-
-      def ruby=(value)
-        unless value.is_a?(RUBY)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-
-        if value.encoding == Encoding::UTF_8
-          @hadoop.set(value.to_java_bytes, 0, value.bytesize)
-        else
-          @hadoop.set(value)
-        end
-      end
     end
 
     begin
@@ -94,11 +38,11 @@ module Humboldt
           unless value.is_a?(Hash) || value.is_a?(Array)
             raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected Hash or Array"
           end
-          @hadoop.set(JSON.generate(value))
+          super(JSON.generate(value))
         end
 
         def ruby
-          JSON.parse(hadoop.to_s)
+          JSON.parse(super())
         end
       end
     end
@@ -106,56 +50,11 @@ module Humboldt
     class Long
       HADOOP = ::Hadoop::Io::LongWritable
       RUBY = ::Integer
-
-      attr_reader :hadoop
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-        @hadoop = value
-      end
-
-      def initialize
-        @hadoop = HADOOP.new
-      end
-
-      def ruby
-        @hadoop.get
-      end
-
-      def ruby=(value)
-        unless value.is_a?(Integer)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-
-        @hadoop.set value
-      end
     end
 
     class None
       HADOOP = ::Hadoop::Io::NullWritable
       RUBY = ::NilClass
-
-      def hadoop
-        HADOOP.get
-      end
-
-      def hadoop=(value)
-        unless value.is_a?(HADOOP)
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{HADOOP}"
-        end
-      end
-
-      def ruby
-        nil
-      end
-
-      def ruby=(value)
-        unless value.nil?
-          raise ArgumentError, "Hadoop type mismatch, was #{value.class}, expected #{RUBY}"
-        end
-      end
     end
 
     TYPE_CONVERTER_CLASS_CACHE = Hash.new { |h,k| h[k] = const_get(k.to_s.capitalize) }

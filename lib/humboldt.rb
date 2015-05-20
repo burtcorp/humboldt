@@ -4,6 +4,9 @@ require 'fileutils'
 require 'rubydoop'
 require 'hadoop'
 
+$CLASSPATH << File.expand_path('../humboldt.jar', __FILE__)
+Java::Humboldt::HumboldtLibrary.new.load(JRuby.runtime, false)
+
 require 'humboldt/java_lib'
 
 require 'ext/hadoop'
