@@ -4,6 +4,7 @@ require 'humboldt'
 
 require 'distributed_cache_test'
 require 'combined_text_test'
+require 'value_types_test'
 
 Rubydoop.configure do |input_path, output_path|
   job 'test distributed cache' do
@@ -27,4 +28,13 @@ cc.job 'test combined text input' do
 
   mapper CombinedTextTest::Mapper
   reducer CombinedTextTest::Reducer
+end
+
+cc = Rubydoop::ConfigurationDefinition.new
+cc.job 'test value types' do
+  input "#{cc.arguments[0]}/value_types", format: :text
+  output "#{cc.arguments[1]}/value_types"
+
+  mapper ValueTypesTest::Mapper
+  reducer ValueTypesTest::Reducer
 end

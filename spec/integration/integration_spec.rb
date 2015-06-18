@@ -89,6 +89,15 @@ describe 'Packaging and running a project' do
         File.readlines('data/test_project/output/combined_text/part-r-00000').last.should == "key\t1 2\n"
       end
     end
+
+    context 'packable value types job' do
+      it 'correctly transfers data using value types' do
+        File.readlines('data/test_project/output/value_types/part-r-00000').should == [
+          "1.A\t2\n",
+          "2.A\t1\n"
+        ]
+      end
+    end
   end
 
   context 'Running with a project configuration' do

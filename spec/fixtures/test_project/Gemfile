@@ -1,6 +1,7 @@
 source 'https://rubygems.org/'
 
 gem 'humboldt'
+gem 'msgpack'
 
 group :development do
   gem 'rake'

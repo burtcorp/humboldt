@@ -51,6 +51,21 @@ module Humboldt
     end
   end
 
+  class PackableValuesMapper < Mapper
+    FooKey = Key.new(:value)
+    FooValue = Value.new(:value)
+
+    input FooKey, FooValue
+    output FooKey, FooValue
+
+    attr_writer :on_map
+
+    map do |key, value|
+      @on_map.call(key, value) if @on_map
+      emit(key, value)
+    end
+  end
+
   describe Mapper do
     let :context do
       stub(:context)
@@ -98,6 +113,56 @@ module Humboldt
         bad_mapper = WrongOutputTypeMapper.new
         bad_mapper.setup(context)
         expect { bad_mapper.map(::Hadoop::Io::Text.new('42'), ::Hadoop::Io::Text.new('Hello World'), context) }.to raise_error(/Hadoop type mismatch/)
+      end
+
+
+      context 'with packable types as input and output' do
+        let :mapper do
+          mapper = PackableValuesMapper.new
+          mapper.setup(context)
+          mapper
+        end
+
+        let :input_key do
+          PackableValuesMapper::FooKey.new('greetings')
+        end
+
+        let :input_value do
+          PackableValuesMapper::FooValue.new('from space')
+        end
+
+        let :hadoop_key do
+          type_converter = TypeConverter[PackableValuesMapper::FooKey].new
+          type_converter.ruby = input_key
+          type_converter.hadoop
+        end
+
+        let :hadoop_value do
+          type_converter = TypeConverter[PackableValuesMapper::FooValue].new
+          type_converter.ruby = input_value
+          type_converter.hadoop
+        end
+
+        before do
+          context.stub(:write)
+        end
+
+
+        it 'converts input from Hadoop types to the given key and value types' do
+          mapper.on_map = proc do |key, value|
+            key.should == input_key
+            value.should == input_value
+          end
+          mapper.map(hadoop_key, hadoop_value, context)
+        end
+
+        it 'converts given output key and value types to Hadoop types' do
+          context.should_receive(:write) do |key, value|
+            key.should == hadoop_key
+            value.should == hadoop_value
+          end
+          mapper.map(hadoop_key, hadoop_value, context)
+        end
       end
     end
 

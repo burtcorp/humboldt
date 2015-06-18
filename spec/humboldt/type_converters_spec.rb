@@ -232,6 +232,43 @@ module Humboldt
           expect { converter.hadoop = ::Hadoop::Io::Text.new('foo') }.to raise_error(/Hadoop type mismatch/)
         end
       end
+
+      context 'with class including Packable' do
+        let :cls do
+          Value.new(:foo)
+        end
+
+        let :converter do
+          TypeConverter[cls].new
+        end
+
+        let :example_value do
+          cls.new('hello')
+        end
+
+        it 'stores an instance of the class' do
+          converter.ruby = example_value
+          converter.ruby.should == example_value
+        end
+
+        it 'converts from Ruby to Hadoop' do
+          converter.ruby = example_value
+          MessagePack.unpack(String.from_java_bytes(converter.hadoop.bytes)[0, converter.hadoop.length]).should == example_value.to_packable
+        end
+
+        it 'converts from Hadoop to Ruby' do
+          converter.hadoop = ::Hadoop::Io::BytesWritable.new(MessagePack.pack(example_value.to_packable).to_java_bytes)
+          converter.ruby.should == example_value
+        end
+
+        it 'complains if you try to set the ruby value to something that is not an instance of the given class' do
+          expect { converter.ruby = 1 }.to raise_error(/Hadoop type mismatch/)
+        end
+
+        it 'complains if you try to set the hadoop value to something that is not a BytesWritable' do
+          expect { converter.hadoop = ::Hadoop::Io::Text.new('foo') }.to raise_error(/Hadoop type mismatch/)
+        end
+      end
     end
 
     context '.from_hadoop' do
