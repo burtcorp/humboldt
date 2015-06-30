@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'thor'
   s.add_dependency 'rubydoop', '~> 1.1.2'
-  s.add_dependency 'aws-sdk', '>= 1.16.0', '< 1.33.0'
+  s.add_dependency 'aws-sdk-v1', '>= 1.44.0'
 
   s.files         = Dir['lib/**/*.{rb,jar}'] + Dir['bin/*'] + Dir['config/**/*']
   s.executables  = %w[humboldt]
