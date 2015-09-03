@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.description = %q{Humboldt provides a mapreduce API abstraction built on top of Rubydoop, and tools to run Hadoop jobs effortlessly both locally and on Amazon EMR}
 
   s.add_dependency 'thor'
-  s.add_dependency 'rubydoop', '~> 1.1.2'
+  s.add_dependency 'rubydoop', '~> 1.1'
   s.add_dependency 'aws-sdk-v1', '>= 1.44.0'
 
   s.files         = Dir['lib/**/*.{rb,jar}'] + Dir['bin/*'] + Dir['config/**/*']
