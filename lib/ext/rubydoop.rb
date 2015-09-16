@@ -33,16 +33,16 @@ module Rubydoop
 
     def enable_compression!
       unless local_mode?
-        set 'mapred.compress.map.output', true
-        set 'mapred.output.compress', true
-        set 'mapred.map.output.compression.codec', 'org.apache.hadoop.io.compress.GzipCodec'
-        set 'mapred.output.compression.codec', 'org.apache.hadoop.io.compress.GzipCodec'
-        set 'mapred.output.compression.type', 'BLOCK'
+        set 'mapreduce.map.output.compress', true
+        set 'mapreduce.output.fileoutputformat.compress', true
+        set 'mapreduce.map.output.compress.codec', 'org.apache.hadoop.io.compress.GzipCodec'
+        set 'mapreduce.output.fileoutputformat.compress.codec', 'org.apache.hadoop.io.compress.GzipCodec'
+        set 'mapreduce.output.fileoutputformat.compress.type', 'BLOCK'
       end
     end
 
     def local_mode?
-      @job.configuration.get('mapred.job.tracker') == 'local'
+      @job.configuration.get('mapreduce.jobtracker.address') == 'local'
     end
 
     def cache_file(file, options = {})
