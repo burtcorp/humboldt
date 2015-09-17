@@ -8,6 +8,7 @@ import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableUtils;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.Job;
 
 
@@ -18,6 +19,10 @@ public class BinaryComparator<K, V> extends WritableComparator implements Config
   private Configuration conf;
   private int leftOffset;
   private int rightOffset;
+
+  public BinaryComparator() {
+    super(BytesWritable.class);
+  }
 
   public static void setOffsets(Configuration conf, int left, int right) {
     conf.setInt(LEFT_OFFSET_PROPERTY_NAME, left);
