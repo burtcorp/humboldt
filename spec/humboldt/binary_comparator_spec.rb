@@ -161,6 +161,22 @@ module Humboldt
           sorted_keys.should eq(strings.values_at(3, 1, 0, 2))
         end
       end
+
+      context 'when attempting to compare something that is not BinaryComparable' do
+        let :left_offset do
+          0
+        end
+
+        let :right_offset do
+          4
+        end
+
+        it 'raises an error' do
+          i1 = Hadoop::Io::IntWritable.new(3)
+          i2 = Hadoop::Io::IntWritable.new(4)
+          expect { comparator.compare(i1, i2) }.to raise_error(java.lang.ClassCastException)
+        end
+      end
     end
   end
 end
