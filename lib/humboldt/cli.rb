@@ -60,7 +60,14 @@ module Humboldt
       end
       input_glob = File.join(options[:data_path], options[:input])
       hadoop_config_path = options[:hadoop_config] || default_hadoop_config_path
-      run_command('hadoop', 'jar', project_jar, job_config, '-conf', hadoop_config_path, input_glob, output_path, *options[:extra_hadoop_args])
+      hadoop_command = ['hadoop', 'jar', project_jar]
+      hadoop_config = ['-conf', hadoop_config_path]
+      job_args = [input_glob, output_path, *options[:extra_hadoop_args]
+      if Rubydoop::VERSION > '2.0.0'
+        run_command(*hadoop_command, job_config, *hadoop_config, *job_args)
+      else
+        run_command(*hadoop_command, *hadoop_config, job_config, *job_args)
+      end
     end
 
     desc 'run-emr', 'run a job in Elastic MapReduce'
