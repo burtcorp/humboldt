@@ -52,7 +52,7 @@ desc 'Release a new gem version'
 task :release => [:spec, 'gem:release']
 
 namespace :setup do
-  hadoop_release = ENV['HADOOP_RELEASE'] || 'hadoop-1.0.3/hadoop-1.0.3-bin'
+  hadoop_release = ENV['HADOOP_RELEASE'] || 'hadoop-2.4.0/hadoop-2.4.0'
   current_link = 'tmp/hadoop-current'
 
   task :hadoop do
