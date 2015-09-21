@@ -58,14 +58,16 @@ namespace :setup do
   task :hadoop do
     hadoop_url = "http://archive.apache.org/dist/hadoop/common/#{hadoop_release}.tar.gz"
     target_dir = "tmp/#{File.dirname(hadoop_release)}"
-    FileUtils.mkdir_p(target_dir)
-    Dir.chdir(target_dir) do
-      unless File.exists?("#{File.basename(hadoop_release)}.tar.gz")
-        command = (<<-END).lines.map(&:strip).join(' && ')
-        curl --progress-bar -O '#{hadoop_url}'
-        tar xf hadoop*.tar.gz
-        END
-        system(command)
+    unless File.directory?(target_dir)
+      FileUtils.mkdir_p(target_dir)
+      Dir.chdir(target_dir) do
+        unless File.exists?("#{File.basename(hadoop_release)}.tar.gz")
+          command = (<<-END).lines.map(&:strip).join(' && ')
+          curl --progress-bar -O '#{hadoop_url}'
+          tar xf hadoop*.tar.gz
+          END
+          system(command)
+        end
       end
     end
     FileUtils.rm_f(current_link)
