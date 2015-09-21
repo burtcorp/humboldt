@@ -3,6 +3,7 @@
 require 'thor'
 require 'aws'
 require 'open3'
+require 'rubydoop/version'
 require 'rubydoop/package' # this prints an annoying warning in JRuby 1.7.0.RC1
 require 'humboldt/emr_flow'
 require 'humboldt/hadoop_status_filter'
