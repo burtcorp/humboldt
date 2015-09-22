@@ -33,16 +33,29 @@ module Rubydoop
 
     def enable_compression!
       unless local_mode?
-        set 'mapreduce.map.output.compress', true
-        set 'mapreduce.output.fileoutputformat.compress', true
-        set 'mapreduce.map.output.compress.codec', 'org.apache.hadoop.io.compress.GzipCodec'
-        set 'mapreduce.output.fileoutputformat.compress.codec', 'org.apache.hadoop.io.compress.GzipCodec'
-        set 'mapreduce.output.fileoutputformat.compress.type', 'BLOCK'
+        if framework == :mapreduce
+          set 'mapreduce.map.output.compress', true
+          set 'mapreduce.output.fileoutputformat.compress', true
+          set 'mapreduce.map.output.compress.codec', 'org.apache.hadoop.io.compress.GzipCodec'
+          set 'mapreduce.output.fileoutputformat.compress.codec', 'org.apache.hadoop.io.compress.GzipCodec'
+          set 'mapreduce.output.fileoutputformat.compress.type', 'BLOCK'
+        else
+          set 'mapred.compress.map.output', true
+          set 'mapred.output.compress', true
+          set 'mapred.map.output.compression.codec', 'org.apache.hadoop.io.compress.GzipCodec'
+          set 'mapred.output.compression.codec', 'org.apache.hadoop.io.compress.GzipCodec'
+          set 'mapred.output.compression.type', 'BLOCK'
+        end
       end
     end
 
+    def framework
+      @framework ||= @job.configuration.get('mapreduce.framework.name') ? :mapreduce : :mapred
+    end
+
     def local_mode?
-      @job.configuration.get('mapreduce.jobtracker.address') == 'local'
+      property = framework == :mapreduce ? 'mapreduce.framework.name' : 'mapred.job.tracker'
+      @job.configuration.get(property) == 'local'
     end
 
     def cache_file(file, options = {})
