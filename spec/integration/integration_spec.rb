@@ -25,7 +25,7 @@ describe 'Packaging and running a project' do
     FileUtils.rm_rf File.join(test_project_dir, 'another_file')
     FileUtils.rm_rf File.join(test_project_dir, 'Gemfile.lock')
 
-    isolated_run(test_project_dir, "gem install ../../../pkg/*.gem")
+    isolated_run(test_project_dir, "gem install ../../../pkg/*#{Humboldt::VERSION}*.gem")
     isolated_run(test_project_dir, "bundle install --retry 3")
     isolated_run(test_project_dir, "bundle exec humboldt package")
   end
