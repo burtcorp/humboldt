@@ -40,11 +40,6 @@ Rubydoop.configure do |input_path, output_path|
     mapper SecondarySortTest::Mapper
     reducer SecondarySortTest::Reducer
 
-    raw do |job|
-      job.set_partitioner_class(Hadoop::Mapreduce::Lib::Partition::BinaryPartitioner)
-      Hadoop::Mapreduce::Lib::Partition::BinaryPartitioner.set_offsets(job.configuration, -SecondarySortTest::USER_ID_LENGTH, -1)
-      job.set_grouping_comparator_class(Humboldt::JavaLib::BinaryComparator)
-      Humboldt::JavaLib::BinaryComparator.set_offsets(job.configuration, -SecondarySortTest::USER_ID_LENGTH, -1)
-    end
+    secondary_sort 0, -SecondarySortTest::USER_ID_LENGTH
   end
 end
