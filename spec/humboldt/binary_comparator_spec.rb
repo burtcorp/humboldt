@@ -62,7 +62,8 @@ module Humboldt
 
       before do
         described_class.set_offsets(conf, left_offset, right_offset)
-        conf.set(Hadoop::Mapreduce::MRJobConfig::MAP_OUTPUT_KEY_CLASS, keys.first.java_class.name)
+        conf.set('mapred.mapoutput.key.class', keys.first.java_class.name)
+        conf.set('mapreduce.map.output.key.class', keys.first.java_class.name)
         comparator.set_conf(conf)
       end
 

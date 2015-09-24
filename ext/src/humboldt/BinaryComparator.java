@@ -9,7 +9,6 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.MRJobConfig;
 
 public class BinaryComparator<K, V> extends WritableComparator implements Configurable {
   public static String LEFT_OFFSET_PROPERTY_NAME = "humboldt.binarycomparator.left.offset";
@@ -45,7 +44,11 @@ public class BinaryComparator<K, V> extends WritableComparator implements Config
     this.conf = conf;
     this.leftOffset = conf.getInt(LEFT_OFFSET_PROPERTY_NAME, 0);
     this.rightOffset = conf.getInt(RIGHT_OFFSET_PROPERTY_NAME, -1);
-    this.keyClass = conf.getClass(MRJobConfig.MAP_OUTPUT_KEY_CLASS, BytesWritable.class, BinaryComparable.class);
+    if (conf.get("mapreduce.map.output.key.class") == null) {
+      this.keyClass = conf.getClass("mapred.mapoutput.key.class", BytesWritable.class, BinaryComparable.class);
+    } else {
+      this.keyClass = conf.getClass("mapreduce.map.output.key.class", BytesWritable.class, BinaryComparable.class);
+    }
   }
 
   public Configuration getConf() {
