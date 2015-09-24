@@ -11,7 +11,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 
-
 public class BinaryComparator<K, V> extends WritableComparator implements Configurable {
   public static String LEFT_OFFSET_PROPERTY_NAME = "humboldt.binarycomparator.left.offset";
   public static String RIGHT_OFFSET_PROPERTY_NAME = "humboldt.binarycomparator.right.offset";
@@ -75,10 +74,10 @@ public class BinaryComparator<K, V> extends WritableComparator implements Config
   }
 
   public int compareRawBytes(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-    int b1LeftIndex = (leftOffset + s1 + l1) % l1;
-    int b1RightIndex = (rightOffset + s1 + l1) % l1;
-    int b2LeftIndex = (leftOffset + s2 + l2) % l2;
-    int b2RightIndex = (rightOffset + s2 + l2) % l2;
+    int b1LeftIndex = s1 + ((leftOffset + l1) % l1);
+    int b1RightIndex = s1 + ((rightOffset + l1) % l1);
+    int b2LeftIndex = s2 + ((leftOffset + l2) % l2);
+    int b2RightIndex = s2 + ((rightOffset + l2) % l2);
     return WritableComparator.compareBytes(b1, b1LeftIndex, b1RightIndex - b1LeftIndex + 1,
                                            b2, b2LeftIndex, b2RightIndex - b2LeftIndex + 1);
   }
