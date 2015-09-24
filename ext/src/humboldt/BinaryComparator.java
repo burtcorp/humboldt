@@ -8,7 +8,6 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
 
 public class BinaryComparator<K, V> extends WritableComparator implements Configurable {
   public static String LEFT_OFFSET_PROPERTY_NAME = "humboldt.binarycomparator.left.offset";
