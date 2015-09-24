@@ -46,7 +46,7 @@ public class BinaryComparator<K, V> extends WritableComparator implements Config
     this.conf = conf;
     this.leftOffset = conf.getInt(LEFT_OFFSET_PROPERTY_NAME, 0);
     this.rightOffset = conf.getInt(RIGHT_OFFSET_PROPERTY_NAME, -1);
-    this.keyClass = conf.getClass(MRJobConfig.MAP_OUTPUT_VALUE_CLASS, BytesWritable.class, BinaryComparable.class);
+    this.keyClass = conf.getClass(MRJobConfig.MAP_OUTPUT_KEY_CLASS, BytesWritable.class, BinaryComparable.class);
   }
 
   public Configuration getConf() {
