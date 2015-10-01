@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    humboldt (1.0.5-java)
+    humboldt (1.1.0-java)
       aws-sdk-v1 (>= 1.44.0)
       rubydoop (~> 1.1)
       thor
@@ -9,7 +9,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    aws-sdk-v1 (1.64.0)
+    aws-sdk-v1 (1.65.0)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
     builder (3.1.4)
