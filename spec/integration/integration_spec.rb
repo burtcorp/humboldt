@@ -25,7 +25,7 @@ describe 'Packaging and running a project' do
     FileUtils.rm_rf File.join(test_project_dir, 'another_file')
     FileUtils.rm_rf File.join(test_project_dir, 'Gemfile.lock')
 
-    isolated_run(test_project_dir, "gem install ../../../pkg/*.gem")
+    isolated_run(test_project_dir, "gem install ../../../pkg/*#{Humboldt::VERSION}*.gem")
     isolated_run(test_project_dir, "bundle install --retry 3")
     isolated_run(test_project_dir, "bundle exec humboldt package")
   end
@@ -109,6 +109,37 @@ describe 'Packaging and running a project' do
 
     it 'uses the job config directive from the configuration file' do
       expect(File.directory?('data/another_job_config/output')).to be_true
+    end
+  end
+
+  context 'Using secondary sort' do
+    VISITS = [
+      ['acme.net', 'USER1'],
+      ['acme.net', 'USER2'],
+      ['acme.net', 'USER2'],
+      ['acme.net', 'USER3'],
+      ['evilcorp.com', 'USER1'],
+      ['evilcorp.com', 'USER1'],
+      ['example.com', 'USER1'],
+      ['example.com', 'USER2'],
+    ].freeze
+
+    before :all do
+      input_path = File.join(test_project_dir, 'data/secondary_sort_test/visits.csv')
+      FileUtils.mkdir_p(File.dirname(input_path))
+      File.open(input_path, 'w') do |io|
+        VISITS.shuffle.each do |site, user_id|
+          io.puts("#{site},#{user_id}")
+        end
+      end
+      isolated_run(test_project_dir, "bundle exec humboldt run-local --job-config=secondary_sort_test --cleanup-before --skip-package --data-path='' --input='#{input_path}' 2>&1 | tee data/log")
+    end
+
+    it 'partitions and groups on part of the map output key' do
+      pairs = File.readlines('data/secondary_sort_test/output/part-r-00000').map { |line| line.chomp.split("\t") }
+      pairs.should include(%w[acme.net 3])
+      pairs.should include(%w[evilcorp.com 1])
+      pairs.should include(%w[example.com 2])
     end
   end
 end
