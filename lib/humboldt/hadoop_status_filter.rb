@@ -54,7 +54,7 @@ module Humboldt
     private
 
     def hadoop_log?(line)
-      line =~ /(?:INFO|WARN) (?:mapred|input|output|util|jvm|mapreduce)\./
+      line =~ /(?:INFO|WARN) (?:mapred|input|output|util|jvm|mapreduce|compress|reduce)\./
     end
 
     def ignore?(line)

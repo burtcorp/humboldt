@@ -172,10 +172,10 @@ module Humboldt
         end
       end
 
-      context 'hadoop 2.2.0' do
+      context 'hadoop >=2.2.0' do
         it_behaves_like 'output filter' do
           let :counters_log do
-            lines = inline_data.drop_while { |line| !line.start_with?('%%% COUNTERS 2.2.0 LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
+            lines = inline_data.drop_while { |line| !line.start_with?('%%% COUNTERS >=2.2.0 LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
             lines.join('')
           end
 
@@ -305,7 +305,7 @@ file:/tmp/hadoop-theo/hadoop-unjar6889015609914014281/lib/jruby-complete-1.7.0.R
 12/10/04 15:59:07 INFO mapred.JobClient:     Reduce output records=0
 12/10/04 15:59:07 INFO mapred.JobClient:     Map output records=338
 
-%%% COUNTERS 2.2.0 LOG %%%
+%%% COUNTERS >=2.2.0 LOG %%%
 
 2014-05-30 12:45:13.268 java[11527:1703] Unable to load realm info from SCDynamicStore
 14/05/30 12:45:13 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
@@ -383,6 +383,9 @@ Warning! Using `format: :combined_text` will not work with remote input paths (e
 14/05/30 12:45:16 INFO mapred.Task: Task 'attempt_local1827895999_0001_r_000000_0' done.
 14/05/30 12:45:17 INFO mapreduce.Job: Job job_local1827895999_0001 running in uber mode : false
 14/05/30 12:45:17 INFO mapreduce.Job:  map 100% reduce 100%
+15/10/01 21:13:23 INFO compress.CodecPool: Got brand-new decompressor [.gz]
+15/10/01 21:24:14 INFO reduce.LocalFetcher: localfetcher#1 about to shuffle output of map attempt_local1275396716_0001_m_000127_0 decomp: 6285685 len: 6285689 to MEMORY
+15/10/01 21:24:14 INFO reduce.InMemoryMapOutput: Read 6285685 bytes from map-output for attempt_local1275396716_0001_m_000127_0
 14/05/30 12:45:17 INFO mapreduce.Job: Job job_local1827895999_0001 completed successfully
 14/05/30 12:45:17 INFO mapreduce.Job: Counters: 24
 	File System Counters
