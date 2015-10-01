@@ -63,6 +63,7 @@ module Humboldt
       run_command('hadoop', 'jar', project_jar, '-conf', hadoop_config_path, job_config, input_glob, output_path, *options[:extra_hadoop_args])
     end
 
+    # @deprecated EMR support will be removed in 2.0
     desc 'run-emr', 'run a job in Elastic MapReduce'
     method_option :input, :type => :string, :required => true, :desc => 'input glob, will be resolved against the data bucket'
     method_option :output, :type => :string, :desc => 'the output directory, defaults to "<project_name>/<job_config>/output" in the job bucket'
@@ -107,6 +108,7 @@ module Humboldt
       say_status(:started, %{EMR job flow "#{job_flow.job_flow_id}"})
     end
 
+    # @deprecated EMR support will be removed in 2.0
     desc 'emr-job', 'show status of the last EMR job'
     def emr_job
       if File.exists?('.humboldtjob')
@@ -118,6 +120,7 @@ module Humboldt
       end
     end
 
+    # @deprecated EMR support will be removed in 2.0
     desc 'emr-jobs', 'list all EMR jobs'
     def emr_jobs
       emr.job_flows.each do |job_flow|

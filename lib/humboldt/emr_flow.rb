@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 module Humboldt
+  # @deprecated EMR support will be removed in 2.0
   class EmrFlow
     attr_reader :output_path
 
