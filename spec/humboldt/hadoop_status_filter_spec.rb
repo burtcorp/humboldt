@@ -5,102 +5,88 @@ require 'stringio'
 
 
 module Humboldt
-  class FakeShell
-    attr_reader :messages, :statuses, :tables
-
-    def initialize
-      @messages = []
-      @statuses = []
-      @tables = []
-    end
-
-    def say(message='')
-      @messages << message
-    end
-
-    def say_status(status, message, color=nil)
-      @statuses << [status, message, color]
-    end
-
-    def print_table(array)
-      @tables << array
-    end
-  end
-
   describe HadoopStatusFilter do
     let :hadoop_stderr do
       StringIO.new
     end
 
-    let :shell do
-      FakeShell.new
+    let :output do
+      []
+    end
+
+    let :listener do
+      lambda { |*args| output << args; nil }
     end
 
     let :filter do
-      described_class.new(hadoop_stderr, shell, true)
+      described_class.new(hadoop_stderr, listener)
     end
 
     describe '#run' do
-      shared_examples 'output filter' do
+      shared_examples 'output filter' do |hadoop_version|
         it 'outputs progress reports' do
           hadoop_stderr.string = counters_log
           filter.run
-          shell.statuses.should include([:progress, 'map 100%, reduce 100%', nil])
+          output.should include([:progress, 'map 100%, reduce 100%'])
         end
 
         it 'outputs formatted counters' do
           hadoop_stderr.string = counters_log
           filter.run
-          shell.tables.first.zip(expected_counters_table).each do |actual_line, expected_line|
+          table = output.find { |o| o.first == :counters }
+          table[1].zip(expected_counters_table).each do |actual_line, expected_line|
             actual_line.should == expected_line
           end
-          shell.tables.first.should == expected_counters_table
         end
 
         it 'outputs Ruby exceptions' do
           hadoop_stderr.string = ruby_error_log
           filter.run
           expected_ruby_errors.each do |line|
-            shell.statuses.should include([:error, line, :red])
+            output.should include([:status, line, :error])
           end
         end
 
         it 'outputs Ruby warnings' do
           hadoop_stderr.string = hadoop_error_log
           filter.run
-          warning = shell.statuses.find { |_, msg, _| msg.include?('warning: already initialized constant ClassReader') }
+          warning = output.find { |args| args[1] && args[1].include?('warning: already initialized constant ClassReader') }
           warning.should_not be_nil
-          warning.first.should == :warning
-          warning.last.should == :yellow
+          warning.first.should == :status
+          warning.last.should == :warning
         end
 
         it 'outputs Hadoop exceptions' do
           hadoop_stderr.string = hadoop_error_log
           filter.run
           expected_hadoop_errors.each do |line|
-            shell.statuses.should include([:error, line, :red])
+            output.should include([:status, line, :error])
           end
         end
 
         it 'does not report HADOOP_HOME warnings as errors' do
+          pending 'not applicable to Hadoop 2.x' if hadoop_version == '2.x'
           hadoop_stderr.string = counters_log
           filter.run
-          shell.statuses.find { |_, msg, _| msg.include?('$HADOOP_HOME') }.should be_nil
+          warning = output.find { |args| args[1] && args[1].include?('$HADOOP_HOME') }
+          warning.first.should eq(:stderr)
         end
 
         it 'does not report Hadoop deprecation warnings as errors' do
+          pending 'not applicable to Hadoop 1.x' if hadoop_version == '1.x'
           hadoop_stderr.string = counters_log
           filter.run
-          shell.statuses.find { |_, msg, _| msg.include?('Configuration.deprecation') }.should be_nil
+          warning = output.find { |args| args[1] && args[1].include?('Configuration.deprecation') }
+          warning.first.should eq(:stderr)
         end
 
         it 'does not report spurious Hadoop output as errors' do
           hadoop_stderr.string = counters_log
           filter.run
-          error_statuses = shell.statuses.select { |status, _, _| status == :error }
-          error_statuses.find { |_, msg, _| msg.include?('Unable to load realm info from SCDynamicStore') }.should be_nil
-          error_statuses.find { |_, msg, _| msg.include?('Unable to load native-hadoop library') }.should be_nil
-          error_statuses.find { |_, msg, _| msg.include?('Snappy native library not loaded') }.should be_nil
+          error_statuses = output.select { |args| args[2] && args[2] == :error }
+          error_statuses.find { |_, msg| msg.include?('Unable to load realm info from SCDynamicStore') }.should be_nil
+          error_statuses.find { |_, msg| msg.include?('Unable to load native-hadoop library') }.should be_nil
+          error_statuses.find { |_, msg| msg.include?('Snappy native library not loaded') }.should be_nil
         end
       end
 
@@ -108,13 +94,12 @@ module Humboldt
         File.readlines(__FILE__).drop_while { |line| !line.start_with?('__END') }.drop(1)
       end
 
-      context 'hadoop 1.0.3' do
-        it_behaves_like 'output filter' do
+      context 'when using Hadoop 1.x' do
+        include_examples 'output filter', '1.x' do
           let :counters_log do
             lines = inline_data.drop_while { |line| !line.start_with?('%%% COUNTERS LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
             lines.join('')
           end
-
 
           let :ruby_error_log do
             lines = inline_data.drop_while { |line| !line.start_with?('%%% RUBY ERROR LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
@@ -172,8 +157,8 @@ module Humboldt
         end
       end
 
-      context 'hadoop >=2.2.0' do
-        it_behaves_like 'output filter' do
+      context 'when using Hadoop 2.x' do
+        include_examples 'output filter', '2.x' do
           let :counters_log do
             lines = inline_data.drop_while { |line| !line.start_with?('%%% COUNTERS >=2.2.0 LOG') }.drop(1).take_while { |line| !line.start_with?('%%%') }
             lines.join('')

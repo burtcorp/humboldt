@@ -1,12 +1,36 @@
 # encoding: utf-8
 
+require 'open3'
+
 module Humboldt
+  # @private
   class HadoopStatusFilter
-    def initialize(hadoop_stderr, shell, silent)
+    def initialize(hadoop_stderr, listener)
       @hadoop_stderr = hadoop_stderr
-      @shell = shell
-      @silent = silent
+      @listener = listener
       @counters = {}
+    end
+
+    def self.run_command_with_filtering(*args, &listener)
+      Open3.popen3(*args) do |stdin, stdout, stderr, wait_thr|
+        stdin.close
+        stdout_printer = Thread.new(stdout) do |stdout|
+          while line = stdout.gets
+            listener.call(:stdout, line.chomp)
+          end
+        end
+        stderr_printer = Thread.new(stderr) do |stderr|
+          filter = new(stderr, listener)
+          filter.run
+        end
+        stdout_printer.join
+        stderr_printer.join
+        if wait_thr.value.exitstatus == 0
+          listener.call(:done)
+        else
+          listener.call(:failed)
+        end
+      end
     end
 
     def run
@@ -46,7 +70,7 @@ module Humboldt
             end
           end
         end
-        @shell.say(line.chomp, :red) unless @silent
+        @listener.call(:stderr, line.chomp)
       end
       print_counters_table
     end
@@ -73,11 +97,11 @@ module Humboldt
     end
 
     def report_progress(map, reduce)
-      @shell.say_status(:progress, "map #{map}%, reduce #{reduce}%")
+      @listener.call(:progress, "map #{map}%, reduce #{reduce}%")
     end
 
     def report_error(line)
-      @shell.say_status(@error_type, line.chomp, @error_type == :error ? :red : :yellow)
+      @listener.call(:status, line.chomp, @error_type)
     end
 
     def print_counters_table
@@ -89,9 +113,7 @@ module Humboldt
         ]
       end
       table.pop
-      @shell.say
-      @shell.print_table(table)
-      @shell.say
+      @listener.call(:counters, table)
     end
   end
 end

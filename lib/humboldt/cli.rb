@@ -2,7 +2,7 @@
 
 require 'thor'
 require 'aws'
-require 'open3'
+require 'rubydoop/version'
 require 'rubydoop/package' # this prints an annoying warning in JRuby 1.7.0.RC1
 require 'humboldt/emr_flow'
 require 'humboldt/hadoop_status_filter'
@@ -204,23 +204,24 @@ module Humboldt
 
     def run_command(*args)
       say_status(:running, 'Hadoop started')
-      Open3.popen3(*args) do |stdin, stdout, stderr, wait_thr|
-        stdin.close
-        stdout_printer = Thread.new(stdout) do |stdout|
-          while line = stdout.gets
-            say(line.chomp)
+      HadoopStatusFilter.run_command_with_filtering(*args) do |type, *args|
+        case type
+        when :stderr
+          unless options.silent?
+            say(args.first, :red)
           end
-        end
-        stderr_printer = Thread.new(stderr) do |stderr|
-          filter = HadoopStatusFilter.new(stderr, self, options.silent?)
-          filter.run
-        end
-        stdout_printer.join
-        stderr_printer.join
-        if wait_thr.value.exitstatus == 0
-          say_status(:done, 'Job completed')
+        when :status
+          say(args[0], args[1] == :error ? :red : :yellow)
+        when :counters
+          say
+          print_table(args.first)
+          say
+        when :done
+          say('Job completed')
+        when :failed
+          say('Job failed', :red)
         else
-          say_status(:failed, 'Job failed', :red)
+          say(args.first)
         end
       end
     end
