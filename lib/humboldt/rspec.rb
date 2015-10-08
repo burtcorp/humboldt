@@ -83,7 +83,7 @@ module RunnerHelpers
 
     def configuration
       @configuration ||= ::Hadoop::Conf::Configuration.new.tap do |config|
-        config.set 'mapred.job.tracker', 'local'
+        config.set('mapreduce.framework.name', 'local')
       end
     end
 
