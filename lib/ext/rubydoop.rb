@@ -109,7 +109,7 @@ module Rubydoop
     # for example when you don't know how wide the part of the key that you want
     # use is. In the example above if you use the domain to identify sites these
     # can be of different length. If your visitor IDs are 20 characters you can
-    # use 0 and -20 as your indexes.
+    # use 0 and -21 as your indexes.
     #
     # @param [Fixnum] start_index The first index of the slice, negative numbers
     #   are counted from the end

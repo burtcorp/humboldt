@@ -114,14 +114,14 @@ describe 'Packaging and running a project' do
 
   context 'Using secondary sort' do
     VISITS = [
-      ['acme.net', 'USER1'],
-      ['acme.net', 'USER2'],
-      ['acme.net', 'USER2'],
-      ['acme.net', 'USER3'],
-      ['evilcorp.com', 'USER1'],
-      ['evilcorp.com', 'USER1'],
-      ['example.com', 'USER1'],
-      ['example.com', 'USER2'],
+      ['acme.net', 'AUSER'],
+      ['acme.net', 'BUSER'],
+      ['acme.net', 'BUSER'],
+      ['acme.net', 'CUSER'],
+      ['evilcorp.com', 'AUSER'],
+      ['evilcorp.com', 'AUSER'],
+      ['example.com', 'AUSER'],
+      ['example.com', 'BUSER'],
     ].freeze
 
     before :all do

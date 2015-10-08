@@ -40,6 +40,6 @@ Rubydoop.configure do |input_path, output_path|
     mapper SecondarySortTest::Mapper
     reducer SecondarySortTest::Reducer
 
-    secondary_sort 0, -SecondarySortTest::USER_ID_LENGTH
+    secondary_sort 0, -SecondarySortTest::USER_ID_LENGTH - 1
   end
 end
