@@ -51,6 +51,26 @@ end
 `mapreduce.input.fileinputformat.split.maxsize` controls the maximum
 size of an input split.
 
+### Secondary sort
+
+Example usage:
+
+A common mapreduce pattern when you need to count uniques is secondary sort, which can be quite a pain to implement. Humboldt makes it really easy, all you need to do say which indexes to partition and group by:
+
+```ruby
+Rubydoop.configure do |input_paths, output_path|
+  job 'my job' do
+    # ...
+
+    secondary_sort 0, 10
+
+    # ...
+  end
+end
+```
+
+See the API documentation for `Rubydoop::JobDefinition#secondary_sort` for more information on how use it.
+
 ## Development setup
 
 Download Hadoop and set up the classpath using
