@@ -25,14 +25,11 @@ module Rubydoop
 
     def input(paths, options={})
       options = options.dup
-      format = options[:format]
-      STDERR.puts "Warning! Using `format: :combined_text` will not work with remote input paths (e.g. S3) and Hadoop 1.x. Cf. https://issues.apache.org/jira/browse/MAPREDUCE-1806" if format == :combined_text
-      unless format.nil? or format.is_a?(Class)
-        class_name = format.to_s.gsub(/^.|_./) {|x| x[-1,1].upcase } + "InputFormat"
-        begin
-          options[:format] = Humboldt::JavaLib.const_get(class_name)
-        rescue NameError
+      if (format = options[:format])
+        if format == :combined_text
+          STDERR.puts "Warning! Using `format: :combined_text` will not work with remote input paths (e.g. S3) and Hadoop 1.x. Cf. https://issues.apache.org/jira/browse/MAPREDUCE-1806"
         end
+        options[:format] = resolve_input_format_class(format)
       end
       inputtt(paths, options)
     end
@@ -127,6 +124,33 @@ module Rubydoop
       Hadoop::Mapreduce::Lib::Partition::BinaryPartitioner.set_offsets(@job.configuration, start_index, end_index)
       @job.set_grouping_comparator_class(Humboldt::JavaLib::BinaryComparator)
       Humboldt::JavaLib::BinaryComparator.set_offsets(@job.configuration, start_index, end_index)
+    end
+
+    private
+
+    def camel_case(str)
+      str.to_s.gsub(/^.|_./) { |x| x[-1, 1].upcase }
+    end
+
+    def resolve_input_format_class(name_or_class)
+      resolve_format_class(name_or_class, :input)
+    end
+
+    def resolve_output_format_class(name_or_class)
+      resolve_format_class(name_or_class, :output)
+    end
+
+    def resolve_format_class(name_or_class, direction)
+      if name_or_class && name_or_class.is_a?(Class)
+        name_or_class
+      elsif name_or_class
+        class_name = "#{camel_case(name_or_class)}#{camel_case(direction)}Format"
+        begin
+          Humboldt::JavaLib.const_get(class_name)
+        rescue NameError
+          Hadoop::Mapreduce::Lib.const_get(camel_case(direction)).const_get(class_name)
+        end
+      end
     end
   end
 end
