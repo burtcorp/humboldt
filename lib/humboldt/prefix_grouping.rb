@@ -4,7 +4,7 @@ require 'zlib'
 
 
 module Humboldt
-  # @deprecated Use {Rubydoop::JobDescription::secondary_sort}
+  # @deprecated Use {Rubydoop::JobDescription#secondary_sort}
   class BinaryPrefixPartitioner
     def initialize(cutoff_index)
       @cutoff_index = cutoff_index
@@ -17,7 +17,7 @@ module Humboldt
     end
   end
 
-  # @deprecated Use {Rubydoop::JobDescription::secondary_sort}
+  # @deprecated Use {Rubydoop::JobDescription#secondary_sort}
   class DropBinaryPrefixPartitioner < BinaryPrefixPartitioner
     def partition(key, value, num_partitions)
       length = key.length > @cutoff_index ? key.length - @cutoff_index : 0
@@ -26,7 +26,7 @@ module Humboldt
     end
   end
 
-  # @deprecated Use {Rubydoop::JobDescription::secondary_sort}
+  # @deprecated Use {Rubydoop::JobDescription#secondary_sort}
   class BinaryPrefixComparator
     def initialize(cutoff_index)
       @cutoff_index = cutoff_index
@@ -39,7 +39,7 @@ module Humboldt
     end
   end
 
-  # @deprecated Use {Rubydoop::JobDescription::secondary_sort}
+  # @deprecated Use {Rubydoop::JobDescription#secondary_sort}
   class DropBinaryPrefixComparator < BinaryPrefixComparator
     def compare_raw(bytes1, start1, length1, bytes2, start2, length2)
       subset_length1 = length1 - @cutoff_index
