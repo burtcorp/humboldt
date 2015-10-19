@@ -126,6 +126,71 @@ module Rubydoop
       Humboldt::JavaLib::BinaryComparator.set_offsets(@job.configuration, start_index, end_index)
     end
 
+    # Registers a named output for use with Hadoop's MultipleOutputs
+    #
+    # It is possible to write to multiple files besides the main mapper or
+    # reducer output through the use of Hadoop's `MultipleOutputs`. Each extra
+    # output has its own output format as well as key and value types. You
+    # register each output when setting up your job, and then refer to it from
+    # the mappers and reducers.
+    #
+    # One case where multiple outputs is useful is when you want to output to
+    # different files based on a property of the data. Say you want to have your
+    # output organized by date, so that subsequent processing of the output can
+    # easily work only only specific dates. To do this you register a named
+    # output, and from your reducer you write to this output instead of
+    # using `emit`. When you write to the output you use the last parameter to
+    # specify a path, relative to the output directory of your job, where this
+    # specific key/value pair should go. Make this parameter the date, and
+    # you're done.
+    #
+    # Multiple outputs can be used both from the mapper and reducer. Using
+    # multiple outputs in a map-only job can be useful if you just want to
+    # organize the inputs into different output directories. Perhaps you have
+    # logs for multiple websites all mixed up together, but want one them
+    # organized per website. Using multiple outputs form the mapper you can
+    # process each line, extract the website name and write the line to a named
+    # output with the name as path.
+    #
+    # When using multiple outputs and you don't emit anyting from your reducer
+    # use the `:lazy` option to {Rubydoop::JobDefinition#output} in order to
+    # disable the creation of the normal output.
+    #
+    # Each named output has its own output format as well as key and value
+    # types. This method does its best to pick defaults if you don't specify
+    # these explicitly. They all default to the same as the job's, which means
+    # the reducer's output key and value types and the output format set
+    # with {Rubydoop::JobDefinition#output}. In order for this to work those
+    # must already be set when you use this method.
+    #
+    # @example Using a named output in a reducer
+    #   setup do
+    #     @multiple_outputs = Hadoop::Mapreduce::Lib::Output::MultipleOutputs.new(current_context)
+    #   end
+    #
+    #   cleanup do
+    #     @multiple_outputs.close
+    #   end
+    #
+    #   reduce do |key, values|
+    #     # Please note that when using multiple outputs you're using the Hadoop
+    #     # APIs directly so you need to create writables yourself.
+    #     key = Hadoop::Io::Text.new('my-key')
+    #     value = Hadoop::Io::Text.new('my-value')
+    #     path = 'something/relative/to/the/job/output'
+    #     @multiple_outputs.write('thenameoftheoutput', key, value, path)
+    #   end
+    #
+    # @param [String] name The name of the output, used when writing to it from
+    #   a mapper or reducer
+    # @param [Hash] options
+    # @option options [JavaClass, Symbol] :format The output format to use,
+    #   defaults to the output format of the job (if already set)
+    # @option options [Symbol] :output_key The output key type, defaults to the
+    #   output key type of the job (i.e. the reducer's output key type)
+    # @option options [Symbol] :output_value The output value type, defaults to
+    #   the output value type of the job (i.e. the reducer's output value type)
+    # @see http://hadoop.apache.org/docs/current/api/org/apache/hadoop/mapreduce/lib/output/MultipleOutputs.html#addNamedOutput(org.apache.hadoop.mapreduce.Job,%20java.lang.String,%20java.lang.Class,%20java.lang.Class,%20java.lang.Class) Hadoop's MultipleOutputs.addNamedOutput
     def named_output(name, options={})
       if (f = options[:format])
         format = resolve_output_format_class(f)
