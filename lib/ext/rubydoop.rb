@@ -126,6 +126,28 @@ module Rubydoop
       Humboldt::JavaLib::BinaryComparator.set_offsets(@job.configuration, start_index, end_index)
     end
 
+    def named_output(name, options={})
+      if (f = options[:format])
+        format = resolve_output_format_class(f)
+      else
+        format = @job.get_output_format_class
+        if format.name.end_with?('LazyOutputFormat')
+          format = @job.configuration.get_class_by_name(@job.configuration.get('mapreduce.output.lazyoutputformat.outputformat'))
+        end
+      end
+      key = @job.get_output_key_class
+      value = @job.get_output_value_class
+      if (k = options[:output_key])
+        converter = Humboldt::TypeConverter[k]
+        key = converter && converter.const_get(:HADOOP)
+      end
+      if (v = options[:output_value])
+        converter = Humboldt::TypeConverter[v]
+        value = converter && converter.const_get(:HADOOP)
+      end
+      Hadoop::Mapreduce::Lib::Output::MultipleOutputs.add_named_output(@job, name, format, key, value)
+    end
+
     private
 
     def camel_case(str)
@@ -141,7 +163,7 @@ module Rubydoop
     end
 
     def resolve_format_class(name_or_class, direction)
-      if name_or_class && name_or_class.is_a?(Class)
+      if name_or_class && (name_or_class.is_a?(Class) || name_or_class.java_kind_of?(java.lang.Class))
         name_or_class
       elsif name_or_class
         class_name = "#{camel_case(name_or_class)}#{camel_case(direction)}Format"

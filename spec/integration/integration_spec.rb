@@ -142,4 +142,54 @@ describe 'Packaging and running a project' do
       pairs.should include(%w[example.com 2])
     end
   end
+
+  context 'Using multiple outputs' do
+    def read_sequence_file(path)
+      uri = "file://#{File.expand_path(path)}"
+      conf = Hadoop::Conf::Configuration.new
+      fs = Hadoop::Fs::FileSystem.get(java.net.URI.create(uri), conf)
+      path = Hadoop::Fs::Path.new(uri)
+      reader = Hadoop::Io::SequenceFile::Reader.new(fs, path, conf)
+      key = Humboldt::TypeConverter.from_hadoop(reader.key_class.ruby_class).new
+      value = Humboldt::TypeConverter.from_hadoop(reader.value_class.ruby_class).new
+      while reader.next(key.hadoop, value.hadoop)
+        yield key.ruby, value.ruby
+      end
+    end
+
+    before :all do
+      input_path = File.join(test_project_dir, 'data/multiple_outputs_test/input')
+      FileUtils.mkdir_p(File.dirname(input_path))
+      File.open(input_path, 'w') do |io|
+        io.puts('foo')
+      end
+      isolated_run(test_project_dir, "bundle exec humboldt run-local --job-config=multiple_outputs_test --cleanup-before --skip-package --data-path='' --input='#{input_path}' 2>&1 | tee data/log")
+    end
+
+    it 'uses the named outputs from both the mapper and reducer' do
+      outputs = Dir['data/multiple_outputs_test/output/*-*'].map { |path| File.basename(path) }
+      outputs.should include('special-path-0-m-00000')
+      outputs.should include('special-path-1-r-00000')
+      outputs.should include('special-path-2-r-00000')
+      outputs.should include('special-path-3-r-00000')
+      outputs.should include('special-path-4-r-00000')
+      outputs.should include('special-path-5-r-00000')
+    end
+
+    it 'outputs the right kind of types' do
+      File.read('data/multiple_outputs_test/output/special-path-0-m-00000').should eq("output-key-0\toutput-value-0\n")
+      File.read('data/multiple_outputs_test/output/special-path-1-r-00000').should eq("output-key-1\toutput-value-1\n")
+      File.read('data/multiple_outputs_test/output/special-path-3-r-00000').should eq("3\toutput-value-3\n")
+      File.read('data/multiple_outputs_test/output/special-path-4-r-00000').should eq("output-key-4\t4\n")
+      File.read('data/multiple_outputs_test/output/special-path-5-r-00000').should eq("5\t5\n")
+    end
+
+    it 'outputs the right kind of formats' do
+      contents = []
+      read_sequence_file('data/multiple_outputs_test/output/special-path-2-r-00000') do |key, value|
+        contents << [key, value]
+      end
+      contents.should eq([['output-key-2', 'output-value-2']])
+    end
+  end
 end
