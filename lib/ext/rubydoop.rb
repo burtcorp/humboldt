@@ -163,22 +163,29 @@ module Rubydoop
     # with {Rubydoop::JobDefinition#output}. In order for this to work those
     # must already be set when you use this method.
     #
-    # @example Using a named output in a reducer
-    #   setup do
-    #     @multiple_outputs = Hadoop::Mapreduce::Lib::Output::MultipleOutputs.new(current_context)
-    #   end
+    # @example Using a named output in a reducer, with the help of Humboldts MultipleOutputs helper
+    #   class SomeMapper
+    #     include MultipleOutputs
     #
-    #   cleanup do
-    #     @multiple_outputs.close
-    #   end
+    #     input :long, :text
+    #     output :text, :text
     #
-    #   reduce do |key, values|
-    #     # Please note that when using multiple outputs you're using the Hadoop
-    #     # APIs directly so you need to create writables yourself.
-    #     key = Hadoop::Io::Text.new('my-key')
-    #     value = Hadoop::Io::Text.new('my-value')
-    #     path = 'something/relative/to/the/job/output'
-    #     @multiple_outputs.write('thenameoftheoutput', key, value, path)
+    #     setup do
+    #       setup_multiple_outputs
+    #     end
+    #
+    #     cleanup do
+    #       cleanup_multiple_outputs
+    #     end
+    #
+    #     reduce do |key, values|
+    #       # Please note that when using multiple outputs you're using the Hadoop
+    #       # APIs directly so you need to create writables yourself.
+    #       key = Hadoop::Io::Text.new('my-key')
+    #       value = Hadoop::Io::Text.new('my-value')
+    #       path = 'something/relative/to/the/job/output'
+    #       multiple_outputs.write('thenameoftheoutput', key, value, path)
+    #     end
     #   end
     #
     # @param [String] name The name of the output, used when writing to it from
