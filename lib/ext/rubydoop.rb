@@ -2,21 +2,27 @@
 
 module Rubydoop
   class JobDefinition
+    # @private
     alias mapperrr mapper
+
     def mapper(cls)
       map_output_key cls.output_key.const_get(:HADOOP) if cls.respond_to?(:output_key)
       map_output_value cls.output_value.const_get(:HADOOP) if cls.respond_to?(:output_value)
       mapperrr cls
     end
 
+    # @private
     alias reducerrr reducer
+
     def reducer(cls)
       output_key cls.output_key.const_get(:HADOOP) if cls.respond_to?(:output_key)
       output_value cls.output_value.const_get(:HADOOP) if cls.respond_to?(:output_value)
       reducerrr cls
     end
 
+    # @private
     alias inputtt input
+
     def input(paths, options={})
       options = options.dup
       format = options[:format]
