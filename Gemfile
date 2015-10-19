@@ -6,6 +6,8 @@ group :development do
   gem 'rake'
   gem 'geminabox'
   gem 'msgpack-jruby'
+  gem 'yard'
+  gem 'maruku'
 end
 
 group :test do

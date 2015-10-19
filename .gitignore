@@ -5,3 +5,5 @@
 /ext/build
 /.ruby-*
 /.rvmrc
+/doc
+/.yardoc
