@@ -60,7 +60,7 @@ module Humboldt
       end
       input_glob = File.join(options[:data_path], options[:input])
       hadoop_config_path = options[:hadoop_config] || default_hadoop_config_path
-      run_command('hadoop', 'jar', project_jar, '-conf', hadoop_config_path, job_config, input_glob, output_path, *options[:extra_hadoop_args])
+      run_command('hadoop', 'jar', project_jar, job_config, '-conf', hadoop_config_path, input_glob, output_path, *options[:extra_hadoop_args])
     end
 
     # @deprecated EMR support will be removed in 2.0
