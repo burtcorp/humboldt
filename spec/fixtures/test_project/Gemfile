@@ -1,6 +1,6 @@
 source 'https://rubygems.org/'
 
-gem 'humboldt'
+gem 'humboldt', path: '../../..'
 
 group :development do
   gem 'rake'
