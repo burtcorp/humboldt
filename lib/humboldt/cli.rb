@@ -189,7 +189,7 @@ module Humboldt
     end
 
     def check_job!
-      raise Thor::Error, "No such job: #{job_config}" unless File.exists?("lib/#{job_config}.rb")
+      raise Thor::Error, "No such job: #{job_config}" unless File.exists?("bin/#{job_config}")
     end
 
     def relative_path(path)
