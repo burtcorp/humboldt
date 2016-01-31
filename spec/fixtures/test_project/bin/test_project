@@ -1,11 +1,13 @@
 # encoding: utf-8
 
+$: << File.expand_path('../../lib', __FILE__)
+
 require 'humboldt'
 
 require 'distributed_cache_test'
 require 'combined_text_test'
 
-Rubydoop.configure do |input_path, output_path|
+Rubydoop.run do |input_path, output_path|
   job 'test distributed cache' do
     input "#{input_path}/cache"
     output "#{output_path}/cache"
@@ -16,15 +18,15 @@ Rubydoop.configure do |input_path, output_path|
     mapper DistributedCacheTest::Mapper
     reducer DistributedCacheTest::Reducer
   end
+
+  job 'test combined text input' do
+    input "#{input_path}/combined_text", format: :combined_text
+    set 'mapreduce.input.fileinputformat.split.maxsize', 32 * (1024 ** 2)
+
+    output "#{output_path}/combined_text"
+
+    mapper CombinedTextTest::Mapper
+    reducer CombinedTextTest::Reducer
+  end
 end
 
-cc = Rubydoop::ConfigurationDefinition.new
-cc.job 'test combined text input' do
-  input "#{cc.arguments[0]}/combined_text", format: :combined_text
-  set 'mapreduce.input.fileinputformat.split.maxsize', 32 * (1024 ** 2)
-
-  output "#{cc.arguments[1]}/combined_text"
-
-  mapper CombinedTextTest::Mapper
-  reducer CombinedTextTest::Reducer
-end

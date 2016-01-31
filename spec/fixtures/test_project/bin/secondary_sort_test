@@ -32,7 +32,7 @@ module SecondarySortTest
   end
 end
 
-Rubydoop.configure do |input_path, output_path|
+Rubydoop.run do |input_path, output_path|
   job 'test secondary sort' do
     input input_path
     output output_path

@@ -1,10 +1,12 @@
 # encoding: utf-8
 
+$: << File.expand_path('../../lib', __FILE__)
+
 require 'humboldt'
 
 require 'combined_text_test'
 
-Rubydoop.configure do |input_path, output_path|
+Rubydoop.run do |input_path, output_path|
   job 'test job' do
     input input_path, format: :text
     output output_path

@@ -49,13 +49,6 @@ describe 'Packaging and running a project' do
     it 'includes the built humboldt JAR file' do
       jar_entries.should include('lib/humboldt.jar')
     end
-
-    it 'includes the relevant project files' do
-      jar_entries.should include("test_project.rb")
-      jar_entries.should include("distributed_cache_test.rb")
-      jar_entries.should include("combined_text_test.rb")
-      jar_entries.should include("another_job_config.rb")
-    end
   end
 
   context 'Running the project jobs' do
