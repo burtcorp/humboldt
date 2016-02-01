@@ -7,7 +7,7 @@ require 'yaml'
 describe 'Packaging and running a project' do
   def isolated_run(dir, cmd)
     Dir.chdir(dir) do
-      Bundler.clean_system("PATH=$GEM_HOME/bin:$PWD/../../../tmp/hadoop-current/bin:$PATH HUMBOLDT_TEST_PROJECT_PATH=$PWD rvm $RUBY_VERSION@humboldt-test_project do #{cmd}")
+      Bundler.clean_system("PATH=$PWD/../../../tmp/hadoop-current/bin:$PATH #{cmd}")
     end
   end
 
@@ -17,6 +17,7 @@ describe 'Packaging and running a project' do
 
   before :all do
     FileUtils.rm_rf File.join(test_project_dir, '.humboldt.yml')
+    FileUtils.rm_rf File.join(test_project_dir, '.bundle')
     FileUtils.rm_rf File.join(test_project_dir, 'build')
     FileUtils.rm_rf File.join(test_project_dir, 'data/test_project/output')
     FileUtils.rm_rf File.join(test_project_dir, 'data/another_job_config/output')
@@ -24,10 +25,10 @@ describe 'Packaging and running a project' do
     FileUtils.rm_rf File.join(test_project_dir, 'important.doc')
     FileUtils.rm_rf File.join(test_project_dir, 'another_file')
     FileUtils.rm_rf File.join(test_project_dir, 'Gemfile.lock')
+    FileUtils.rm_rf File.join(test_project_dir, 'vendor/test_project-bundle')
 
-    isolated_run(test_project_dir, "gem install ../../../pkg/*#{Humboldt::VERSION}*.gem")
-    isolated_run(test_project_dir, "bundle install --retry 3")
-    isolated_run(test_project_dir, "bundle exec humboldt package")
+    isolated_run(test_project_dir, 'bundle install --retry 3 --path vendor/test_project-bundle --binstubs .bundle/bin')
+    isolated_run(test_project_dir, ".bundle/bin/humboldt package")
   end
 
   around do |example|
@@ -59,7 +60,7 @@ describe 'Packaging and running a project' do
 
   context 'Running the project jobs' do
     before :all do
-      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --skip-package --data-path=data --input='input' 2>&1 | tee data/log")
+      isolated_run(test_project_dir, ".bundle/bin/humboldt run-local --cleanup-before --skip-package --data-path=data --input='input' 2>&1 | tee data/log")
     end
 
     let :log do
@@ -100,7 +101,7 @@ describe 'Packaging and running a project' do
       File.open(File.join(test_project_dir, '.humboldt.yml'), 'w') do |f|
         YAML.dump(CONFIG, f)
       end
-      isolated_run(test_project_dir, "bundle exec humboldt run-local --cleanup-before --skip-package --data-path=data --input='input/combined_text' 2>&1 | tee data/log")
+      isolated_run(test_project_dir, ".bundle/bin/humboldt run-local --cleanup-before --skip-package --data-path=data --input='input/combined_text' 2>&1 | tee data/log")
     end
 
     after :all do
@@ -132,7 +133,7 @@ describe 'Packaging and running a project' do
           io.puts("#{site},#{user_id}")
         end
       end
-      isolated_run(test_project_dir, "bundle exec humboldt run-local --job-config=secondary_sort_test --cleanup-before --skip-package --data-path='' --input='#{input_path}' 2>&1 | tee data/log")
+      isolated_run(test_project_dir, ".bundle/bin/humboldt run-local --job-config=secondary_sort_test --cleanup-before --skip-package --data-path='' --input='#{input_path}' 2>&1 | tee data/log")
     end
 
     it 'partitions and groups on part of the map output key' do
